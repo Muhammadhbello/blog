@@ -1,19 +1,6 @@
 <?php
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
-
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
@@ -35,4 +22,22 @@ return [
         ],
     ],
 
+    'paymentpoint' => [
+        'base_url' => env('PAYMENTPOINT_BASE_URL', 'https://sandbox-api.paymentpoint.co/v1'),
+        'api_key' => env('PAYMENTPOINT_API_KEY'),
+        'api_secret' => env('PAYMENTPOINT_API_SECRET'),
+        'webhook_secret' => env('PAYMENTPOINT_WEBHOOK_SECRET'),
+    ],
+
+    'palmpay' => [
+        'base_url' => env('PALMPAY_BASE_URL', 'https://sandbox-api.palmpay.com/v1'),
+        'api_key' => env('PALMPAY_API_KEY'),
+        'secret_key' => env('PALMPAY_SECRET_KEY'),
+    ],
+
+    'twilio' => [
+        'account_sid' => env('TWILIO_ACCOUNT_SID'),
+        'auth_token' => env('TWILIO_AUTH_TOKEN'),
+        'from_number' => env('TWILIO_FROM_NUMBER'),
+    ],
 ];
