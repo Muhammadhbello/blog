@@ -8,6 +8,10 @@ use App\Http\Controllers\Api\BusinessController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\WebhookController;
+use App\Http\Controllers\Api\WardController;
+use App\Http\Controllers\Api\DepartmentController;
+use App\Http\Controllers\Api\RevenueCategoryController;
+use App\Http\Controllers\Api\RevenueItemController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -25,6 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::middleware(['role:chairman,treasurer,hod,consultant,collector'])->group(function () {
+        Route::apiResource('wards', WardController::class);
+        Route::apiResource('departments', DepartmentController::class);
+        Route::apiResource('revenue-categories', RevenueCategoryController::class);
+        Route::apiResource('revenue-items', RevenueItemController::class);
         Route::apiResource('businesses', BusinessController::class);
         Route::apiResource('invoices', InvoiceController::class);
     });
