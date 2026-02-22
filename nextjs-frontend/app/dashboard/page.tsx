@@ -191,6 +191,19 @@ export default function DashboardPage() {
                 </Link>
               </div>
             </div>
+
+            {/* Payment Testing */}
+            <div className="bg-gradient-to-br from-yellow-50 to-amber-50 backdrop-blur-xl rounded-2xl shadow-lg border-2 border-yellow-300 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Test Payment Flow</h3>
+                  <p className="text-sm text-gray-600">Simulate complete payment with revenue split</p>
+                </div>
+                <Link href="/payment-testing" className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 text-white rounded-xl hover:from-yellow-600 hover:to-amber-700 transition shadow-lg font-semibold">
+                  Try Now
+                </Link>
+              </div>
+            </div>
           </div>
         )}
       </main>
