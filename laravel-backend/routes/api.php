@@ -40,5 +40,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('revenue-items', RevenueItemController::class);
         Route::apiResource('businesses', BusinessController::class);
         Route::apiResource('invoices', InvoiceController::class);
+
+        // Ticketing
+        Route::post('/tickets/batch', [TicketController::class, 'createBatch']);
+        Route::get('/tickets/batches', [TicketController::class, 'getBatches']);
+        Route::get('/tickets', [TicketController::class, 'getTickets']);
+        Route::post('/tickets/sell', [TicketController::class, 'sellTicket']);
+        Route::post('/tickets/verify', [TicketController::class, 'verifyTicket']);
+
+        // Defaulters
+        Route::post('/defaulters/detect', [DefaulterController::class, 'detectDefaulters']);
+        Route::get('/defaulters', [DefaulterController::class, 'getDefaulters']);
+        Route::post('/defaulters/{defaulter}/remind', [DefaulterController::class, 'sendReminder']);
+        Route::post('/defaulters/bulk-remind', [DefaulterController::class, 'sendBulkReminders']);
+
+        // Consultants
+        Route::post('/consultants/assign', [ConsultantController::class, 'assignConsultant']);
+        Route::get('/consultants/assignments', [ConsultantController::class, 'getAssignments']);
+        Route::get('/consultants', [ConsultantController::class, 'getConsultants']);
+        Route::get('/consultants/scoped-data', [ConsultantController::class, 'getScopedData']);
     });
 });
