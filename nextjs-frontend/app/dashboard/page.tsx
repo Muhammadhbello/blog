@@ -173,22 +173,22 @@ export default function DashboardPage() {
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 transition-all duration-200 text-left">
-                  <p className="text-sm font-semibold text-blue-900">New Business</p>
-                  <p className="text-xs text-blue-600 mt-1">Register business</p>
-                </button>
-                <button className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border border-green-200 transition-all duration-200 text-left">
-                  <p className="text-sm font-semibold text-green-900">Generate Invoice</p>
-                  <p className="text-xs text-green-600 mt-1">Create new invoice</p>
-                </button>
-                <button className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border border-purple-200 transition-all duration-200 text-left">
-                  <p className="text-sm font-semibold text-purple-900">Tickets</p>
-                  <p className="text-xs text-purple-600 mt-1">Manage tickets</p>
-                </button>
-                <button className="p-4 rounded-xl bg-gradient-to-br from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 border border-orange-200 transition-all duration-200 text-left">
-                  <p className="text-sm font-semibold text-orange-900">Reports</p>
-                  <p className="text-xs text-orange-600 mt-1">View analytics</p>
-                </button>
+                <Link href="/businesses" className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 transition-all duration-200 text-left block">
+                  <p className="text-sm font-semibold text-blue-900">Businesses</p>
+                  <p className="text-xs text-blue-600 mt-1">Register & manage</p>
+                </Link>
+                <Link href="/invoices" className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border border-green-200 transition-all duration-200 text-left block">
+                  <p className="text-sm font-semibold text-green-900">Invoices</p>
+                  <p className="text-xs text-green-600 mt-1">Generate & track</p>
+                </Link>
+                <Link href="/revenue-items" className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border border-purple-200 transition-all duration-200 text-left block">
+                  <p className="text-sm font-semibold text-purple-900">Revenue Items</p>
+                  <p className="text-xs text-purple-600 mt-1">Configure pricing</p>
+                </Link>
+                <Link href="/wards" className="p-4 rounded-xl bg-gradient-to-br from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 border border-orange-200 transition-all duration-200 text-left block">
+                  <p className="text-sm font-semibold text-orange-900">Wards</p>
+                  <p className="text-xs text-orange-600 mt-1">Manage locations</p>
+                </Link>
               </div>
             </div>
           </div>
