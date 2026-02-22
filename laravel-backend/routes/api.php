@@ -16,6 +16,12 @@ use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\DefaulterController;
 use App\Http\Controllers\Api\ConsultantController;
 use App\Http\Controllers\Api\AnalyticsController;
+use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\PlatformUserController;
+use App\Http\Controllers\Api\PlatformSettingController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\TenantUserController;
+use App\Http\Controllers\Api\CollectorAssignmentController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -29,11 +35,49 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
     Route::get('/analytics/advanced', [AnalyticsController::class, 'getAdvancedStats']);
 
+    // ==========================================
+    // PLATFORM ADMIN ROUTES (Super Admin Only)
+    // ==========================================
+    Route::middleware(['role:super_admin'])->prefix('platform')->group(function () {
+        // Tenant Management
+        Route::apiResource('tenants', TenantController::class);
+        Route::get('/tenants-stats', [TenantController::class, 'stats']);
+        Route::post('/tenants/{tenant}/suspend', [TenantController::class, 'suspend']);
+        Route::post('/tenants/{tenant}/activate', [TenantController::class, 'activate']);
+        Route::put('/tenants/{tenant}/revenue-share', [TenantController::class, 'updateRevenueShare']);
+
+        // Platform User Management
+        Route::apiResource('users', PlatformUserController::class);
+        Route::get('/users-stats', [PlatformUserController::class, 'stats']);
+
+        // Platform Settings
+        Route::get('/settings', [PlatformSettingController::class, 'index']);
+        Route::post('/settings', [PlatformSettingController::class, 'store']);
+        Route::put('/settings/{platformSetting}', [PlatformSettingController::class, 'update']);
+        Route::delete('/settings/{platformSetting}', [PlatformSettingController::class, 'destroy']);
+        Route::post('/settings/bulk', [PlatformSettingController::class, 'bulkUpdate']);
+        Route::post('/settings/init-defaults', [PlatformSettingController::class, 'initDefaults']);
+
+        // Platform Audit Logs
+        Route::get('/audit-logs', [AuditLogController::class, 'index']);
+        Route::get('/audit-logs/stats', [AuditLogController::class, 'stats']);
+        Route::get('/audit-logs/modules', [AuditLogController::class, 'modules']);
+        Route::get('/audit-logs/actions', [AuditLogController::class, 'actions']);
+
+        // System Role Management
+        Route::post('/roles/init-system', [RoleController::class, 'initSystemRoles']);
+    });
+
+    // Legacy tenant routes (backward compatibility)
     Route::middleware(['role:super_admin'])->group(function () {
         Route::apiResource('tenants', TenantController::class);
     });
 
+    // ==========================================
+    // TENANT ADMIN ROUTES (Chairman, Treasurer, HOD)
+    // ==========================================
     Route::middleware(['role:chairman,treasurer,hod,consultant,collector'])->group(function () {
+        // Core Resources
         Route::apiResource('wards', WardController::class);
         Route::apiResource('departments', DepartmentController::class);
         Route::apiResource('revenue-categories', RevenueCategoryController::class);
@@ -59,5 +103,36 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/consultants/assignments', [ConsultantController::class, 'getAssignments']);
         Route::get('/consultants', [ConsultantController::class, 'getConsultants']);
         Route::get('/consultants/scoped-data', [ConsultantController::class, 'getScopedData']);
+
+        // Tenant Audit Logs
+        Route::get('/audit-logs', [AuditLogController::class, 'index']);
+        Route::get('/audit-logs/stats', [AuditLogController::class, 'stats']);
+    });
+
+    // ==========================================
+    // TENANT USER MANAGEMENT (Chairman Only)
+    // ==========================================
+    Route::middleware(['role:chairman'])->prefix('tenant')->group(function () {
+        // User Management
+        Route::apiResource('users', TenantUserController::class);
+        Route::get('/users-stats', [TenantUserController::class, 'stats']);
+        Route::post('/users/{user}/assign-roles', [TenantUserController::class, 'assignRoles']);
+
+        // Role Management
+        Route::apiResource('roles', RoleController::class);
+        Route::get('/permissions', [RoleController::class, 'permissions']);
+        Route::post('/roles/{role}/assign-users', [RoleController::class, 'assignUsers']);
+
+        // Collector Assignments
+        Route::apiResource('collector-assignments', CollectorAssignmentController::class);
+        Route::get('/collectors', [CollectorAssignmentController::class, 'getCollectors']);
+        Route::get('/collector-assignments-stats', [CollectorAssignmentController::class, 'stats']);
+    });
+
+    // ==========================================
+    // COLLECTOR SPECIFIC ROUTES
+    // ==========================================
+    Route::middleware(['role:collector'])->prefix('collector')->group(function () {
+        Route::get('/my-assignments', [CollectorAssignmentController::class, 'getMyAssignments']);
     });
 });
