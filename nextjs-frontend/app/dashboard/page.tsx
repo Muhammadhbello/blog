@@ -208,8 +208,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Core Modules</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Link href="/businesses" className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 transition-all duration-200 text-left block">
                   <p className="text-sm font-semibold text-blue-900">Businesses</p>
@@ -226,6 +226,29 @@ export default function DashboardPage() {
                 <Link href="/wards" className="p-4 rounded-xl bg-gradient-to-br from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 border border-orange-200 transition-all duration-200 text-left block">
                   <p className="text-sm font-semibold text-orange-900">Wards</p>
                   <p className="text-xs text-orange-600 mt-1">Manage locations</p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Advanced Features */}
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Advanced Features</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Link href="/tickets" className="p-4 rounded-xl bg-gradient-to-br from-cyan-50 to-blue-50 hover:from-cyan-100 hover:to-blue-100 border border-cyan-200 transition-all duration-200 text-left block">
+                  <p className="text-sm font-semibold text-cyan-900">🎫 Ticketing</p>
+                  <p className="text-xs text-cyan-600 mt-1">QR code batches</p>
+                </Link>
+                <Link href="/defaulters" className="p-4 rounded-xl bg-gradient-to-br from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 border border-red-200 transition-all duration-200 text-left block">
+                  <p className="text-sm font-semibold text-red-900">📱 Defaulters</p>
+                  <p className="text-xs text-red-600 mt-1">SMS reminders</p>
+                </Link>
+                <Link href="/consultants" className="p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 border border-indigo-200 transition-all duration-200 text-left block">
+                  <p className="text-sm font-semibold text-indigo-900">👔 Consultants</p>
+                  <p className="text-xs text-indigo-600 mt-1">Assignments</p>
+                </Link>
+                <Link href="/analytics" className="p-4 rounded-xl bg-gradient-to-br from-violet-50 to-fuchsia-50 hover:from-violet-100 hover:to-fuchsia-100 border border-violet-200 transition-all duration-200 text-left block">
+                  <p className="text-sm font-semibold text-violet-900">📊 Analytics</p>
+                  <p className="text-xs text-violet-600 mt-1">Charts & insights</p>
                 </Link>
               </div>
             </div>
