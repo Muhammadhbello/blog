@@ -18,8 +18,14 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      router.push('/dashboard');
+      const response = await login(email, password);
+      const userRole = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}').role : null;
+      
+      if (userRole === 'super_admin') {
+        router.push('/platform');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
