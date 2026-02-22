@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/analytics/advanced', [AnalyticsController::class, 'getAdvancedStats']);
 
     Route::middleware(['role:super_admin'])->group(function () {
         Route::apiResource('tenants', TenantController::class);
