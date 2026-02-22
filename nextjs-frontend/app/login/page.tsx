@@ -93,7 +93,9 @@ export default function LoginPage() {
           </button>
 
           <div className="text-sm text-center text-gray-600">
-            <p className="mt-4">Demo Credentials:</p>
+            <p className="mt-4 font-semibold">Platform Admin:</p>
+            <p className="text-xs mt-1">admin@flexcloud.com / password123</p>
+            <p className="mt-3 font-semibold">Tenant Users:</p>
             <p className="text-xs mt-1">Chairman: chairman@demo-lga.gov / password123</p>
             <p className="text-xs">Treasurer: treasurer@demo-lga.gov / password123</p>
           </div>
