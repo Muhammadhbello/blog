@@ -1,15 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRealtimeStats } from '@/hooks/useRealtimeStats';
 import apiClient from '@/lib/api';
+import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, logout, isLoading } = useAuth();
-  const [stats, setStats] = useState<any>(null);
-  const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -17,37 +18,46 @@ export default function DashboardPage() {
     }
   }, [user, isLoading, router]);
 
-  useEffect(() => {
-    if (user) {
-      fetchStats();
-    }
-  }, [user]);
-
-  const fetchStats = async () => {
-    try {
-      const response = await apiClient.get('/dashboard/stats');
-      setStats(response.data);
-    } catch (error) {
-      console.error('Failed to fetch stats', error);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
-
-  if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
     }).format(amount);
   };
+
+  const fetchStats = async () => {
+    const response = await apiClient.get('/dashboard/stats');
+    return response.data;
+  };
+
+  const { data: stats, loading: loadingStats, refetch } = useRealtimeStats(
+    fetchStats,
+    {
+      enabled: !!user,
+      interval: 5000, // Poll every 5 seconds
+      onUpdate: (newStats, previousStats) => {
+        // Check if revenue increased
+        if (newStats.total_revenue > previousStats.total_revenue) {
+          const increase = newStats.total_revenue - previousStats.total_revenue;
+          toast.success('💰 New Payment Received!', {
+            description: `Revenue increased by ${formatCurrency(increase)}`,
+            duration: 5000,
+          });
+        }
+        
+        // Check if transaction count increased
+        if (newStats.total_transactions > previousStats.total_transactions) {
+          const newTransactions = newStats.total_transactions - previousStats.total_transactions;
+          if (newTransactions > 0) {
+            toast.info('📊 Dashboard Updated', {
+              description: `${newTransactions} new transaction${newTransactions > 1 ? 's' : ''} recorded`,
+              duration: 3000,
+            });
+          }
+        }
+      },
+    }
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
