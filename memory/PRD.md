@@ -31,7 +31,7 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 - [x] Revenue share configuration per tenant
 
 ### Tenant Portal
-- [x] Tenant login page
+- [x] Tenant login page with role tabs (Staff/Business/Consultant)
 - [x] Dashboard with stats cards
 - [x] Sidebar navigation (independently scrollable)
 - [x] **Impersonation Banner** - Shows when platform admin is viewing tenant
@@ -43,7 +43,7 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 - [x] **Revenue Items** - CRUD with tariff configuration
 - [x] **Revenue Points** - CRUD for collection locations
 - [x] **Businesses** - Registration with categories/sizes
-- [x] **Invoices** - CRUD, issue, bulk generation, payments
+- [x] **Invoices** - CRUD, issue, bulk generation, payments, **PDF printing**
 - [x] **Tickets** - Batch creation, sell, verify, reports
 - [x] **Closings** - Daily/weekly revenue reconciliation
 - [x] **Consultants** - CRUD with portal access
@@ -52,10 +52,23 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 - [x] **Analytics** - Advanced statistics
 
 ### Settings (Per-Tenant)
-- [x] **Payment Gateway Settings** (PaymentPoint/PalmPay)
-- [x] **SMS Gateway Settings** (Termii)
+- [x] **Payment Gateway Settings** (PaymentPoint/PalmPay) - Live API integration ready
+- [x] **SMS Gateway Settings** (Termii/Twilio/AfricasTalking) - Live API integration ready
 - [x] **Notification Templates** - SMS templates with placeholders
 - [x] **General Settings** - Tenant configuration
+
+### Portals
+- [x] **Business Portal** - Dedicated dashboard for businesses
+  - Virtual account display with copy button
+  - Invoice history and status
+  - Payment history
+  - Business profile
+- [x] **Consultant Portal** - Dedicated dashboard for consultants
+  - Today's collections and stats
+  - Commission tracking
+  - Assignment management
+  - Ticket selling interface
+  - Closing submission
 
 ### Roles & Permissions
 - [x] Chairman - Full access
@@ -74,9 +87,10 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 │   ├── app/
 │   │   ├── Http/
 │   │   │   ├── Controllers/Api/
-│   │   │   │   ├── AuthController.php
-│   │   │   │   ├── TenantController.php
-│   │   │   │   ├── BusinessController.php
+│   │   │   │   ├── AuthController.php (with business/consultant login)
+│   │   │   │   ├── TenantController.php (with impersonation)
+│   │   │   │   ├── BusinessController.php (with portal methods)
+│   │   │   │   ├── ConsultantController.php (with dashboard)
 │   │   │   │   ├── InvoiceController.php
 │   │   │   │   ├── TicketController.php
 │   │   │   │   ├── RevenuePointController.php
@@ -92,8 +106,8 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 │   │       ├── InvoiceService.php
 │   │       ├── TicketService.php
 │   │       ├── ClosingService.php
-│   │       ├── PaymentGatewayService.php
-│   │       └── SMSService.php
+│   │       ├── PaymentGatewayService.php (PaymentPoint/PalmPay)
+│   │       └── SMSService.php (Termii/Twilio/AfricasTalking)
 │   ├── database/migrations/
 │   │   ├── platform/
 │   │   └── tenant/
@@ -101,19 +115,23 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 │
 └── nextjs-frontend/
     ├── app/
-    │   ├── login/
+    │   ├── login/page.tsx (with Staff/Business/Consultant tabs)
     │   ├── dashboard/
     │   ├── platform/
     │   │   ├── dashboard/
-    │   │   ├── tenants/
+    │   │   ├── tenants/ (with Enter Portal button)
     │   │   └── users/
+    │   ├── business-portal/page.tsx (Business dashboard)
+    │   ├── consultant-portal/page.tsx (Consultant dashboard)
     │   ├── businesses/
     │   ├── invoices/
+    │   │   ├── page.tsx
+    │   │   └── [id]/print/page.tsx (PDF view)
     │   ├── tickets/
-    │   ├── closings/
+    │   ├── closings/page.tsx
     │   ├── revenue-points/
     │   ├── revenue-items/
-    │   ├── departments/
+    │   ├── departments/page.tsx
     │   ├── wards/
     │   ├── consultants/
     │   ├── collectors/
@@ -122,7 +140,7 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
     │   ├── settings/
     │   └── admin/
     └── components/
-        ├── TenantLayout.tsx
+        ├── TenantLayout.tsx (with impersonation banner)
         └── PlatformLayout.tsx
 ```
 
@@ -134,6 +152,9 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 - `POST /api/platform/tenants/{id}/impersonate` - Enter tenant portal
 - `POST /api/platform/tenants/{id}/suspend` - Suspend tenant
 - `POST /api/platform/tenants/{id}/activate` - Activate tenant
+
+### Auth Routes
+- `POST /api/auth/login` - Login (supports login_type: user/business/consultant)
 
 ### Tenant Routes
 - `GET/POST /api/revenue-points` - Revenue points CRUD
@@ -149,70 +170,58 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 - `GET /api/business/invoices` - Business invoices
 - `GET /api/business/profile` - Business profile
 
-## Database Schema
-
-### Platform Database
-- `tenants` - Tenant registry
-- `platform_users` - Super admin users
-- `platform_audit_logs` - Platform actions log
-
-### Tenant Database (per tenant)
-- `tenant_users` - Tenant users with roles
-- `wards` - Administrative wards
-- `departments` - Organization departments
-- `revenue_categories` - Revenue categories
-- `revenue_items` - Revenue items with tariffs
-- `revenue_points` - Collection locations
-- `businesses` - Registered businesses
-- `invoices` / `invoice_items` / `invoice_payments`
-- `ticket_batches` / `tickets` / `ticket_payments`
-- `closings` - Revenue reconciliation
-- `consultants` / `consultant_assignments`
-- `payment_settings` - Per-tenant payment config
-- `sms_settings` - Per-tenant SMS config
-- `notification_templates` - SMS/email templates
-
-## Testing Credentials
-
-### Platform Admin
-- Email: admin@flexcloud.ng
-- Password: password123
-
-### Tenant Admin (created per tenant)
-- Set during tenant creation
+### Consultant Portal Routes (`/api/consultant/*`)
+- `GET /api/consultant/dashboard` - Consultant dashboard
+- `GET /api/consultant/my-assignments` - My assignments
+- `GET /api/consultant/my-tickets` - My tickets
+- `GET /api/consultant/my-closings` - My closings
 
 ---
 
 ## Changelog
 
-### December 2025
+### December 2025 (Session 2)
+- Added Business Portal frontend with virtual account, invoices, payments
+- Added Consultant Portal frontend with stats, assignments, tickets, closings
+- Added Invoice PDF/Print view
+- Enhanced login page with Staff/Business/Consultant tabs
+- Added Print button to invoices list
+- Updated AuthController for multi-type login
+- Updated ConsultantController with dashboard endpoint
+- Updated BusinessController with portal endpoints
+- Live Payment Gateway integration (PaymentPoint/PalmPay) - API ready
+- Live SMS Gateway integration (Termii/Twilio/AfricasTalking) - API ready
+
+### December 2025 (Session 1)
 - Initial multi-tenant architecture implementation
 - Platform admin dashboard and tenant management
 - Tenant portal with all core modules
 - Revenue points and closings management
-- Business and consultant portals
 - Per-tenant payment/SMS settings
 - Impersonation feature for platform admin
 - RBAC implementation
 
 ## Roadmap
 
-### P0 (Critical)
+### P0 (Critical) - COMPLETED
 - [x] Multi-database tenancy core
 - [x] Platform admin dashboard
 - [x] Tenant modules (Wards, Departments, Revenue Points)
-- [x] Invoicing system
+- [x] Invoicing system with PDF
 - [x] Ticketing system
 - [x] Closings management
+- [x] Business Portal
+- [x] Consultant Portal
+- [x] Payment Gateway Integration (API ready)
+- [x] SMS Gateway Integration (API ready)
 
-### P1 (High)
-- [ ] Live payment gateway integration (PaymentPoint/PalmPay)
-- [ ] Live SMS integration (Termii)
-- [ ] Invoice PDF generation
-- [ ] Offline POS sync
+### P1 (High) - REMAINING
+- [ ] Offline POS sync queue
+- [ ] Advanced bulk invoice operations UI
+- [ ] Receipt/ticket printing for thermal printers
 
 ### P2 (Medium)
-- [ ] Advanced reporting
+- [ ] Advanced reporting with charts
 - [ ] Email notifications
 - [ ] Mobile app (React Native)
 
