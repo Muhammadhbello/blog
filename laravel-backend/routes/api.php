@@ -224,4 +224,31 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/invoices', [InvoiceController::class, 'businessInvoices']);
         Route::get('/profile', [BusinessController::class, 'portalProfile']);
     });
+
+    // ==========================================
+    // EMAIL NOTIFICATION ROUTES
+    // ==========================================
+    Route::middleware(['role:chairman,treasurer'])->prefix('notifications')->group(function () {
+        Route::get('/email/settings', [NotificationController::class, 'getEmailSettings']);
+        Route::post('/email/settings', [NotificationController::class, 'saveEmailSettings']);
+        Route::post('/email/test', [NotificationController::class, 'testEmail']);
+        Route::get('/email/templates', [NotificationController::class, 'getTemplates']);
+        Route::put('/email/templates/{id}', [NotificationController::class, 'updateTemplate']);
+        Route::get('/email/logs', [NotificationController::class, 'getLogs']);
+        Route::get('/email/stats', [NotificationController::class, 'getStats']);
+        Route::post('/email/bulk', [NotificationController::class, 'sendBulkEmail']);
+        Route::post('/email/resend/{id}', [NotificationController::class, 'resendEmail']);
+    });
+
+    // ==========================================
+    // PRINT / RECEIPT ROUTES
+    // ==========================================
+    Route::middleware(['role:chairman,treasurer,hod,collector,consultant'])->prefix('print')->group(function () {
+        Route::get('/ticket/{id}', [PrintController::class, 'getTicketPrintData']);
+        Route::get('/batch/{batchId}/tickets', [PrintController::class, 'getBatchTicketsPrintData']);
+        Route::get('/payment/{paymentId}/receipt', [PrintController::class, 'getPaymentReceiptData']);
+        Route::get('/invoice/{invoiceId}', [PrintController::class, 'getInvoicePrintData']);
+        Route::get('/closing/{closingId}/receipt', [PrintController::class, 'getClosingReceiptData']);
+        Route::post('/settings', [PrintController::class, 'updatePrintSettings']);
+    });
 });
