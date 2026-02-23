@@ -196,6 +196,24 @@ export default function InvoicesPage() {
                 <div className="text-right">
                   <p className="text-2xl font-bold text-gray-900">{formatCurrency(invoice.amount)}</p>
                   <p className="text-sm text-gray-500 mt-1">Amount Due</p>
+                  <div className="mt-3 flex space-x-2">
+                    <Link
+                      href={`/invoices/${invoice.id}/print`}
+                      className="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition flex items-center space-x-1"
+                      data-testid={`print-invoice-${invoice.id}`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                      <span>Print</span>
+                    </Link>
+                    <button
+                      className="px-3 py-1.5 text-xs font-medium bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition"
+                      data-testid={`payment-invoice-${invoice.id}`}
+                    >
+                      Record Payment
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
