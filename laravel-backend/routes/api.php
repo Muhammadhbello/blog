@@ -69,6 +69,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // System Role Management
         Route::post('/roles/init-system', [RoleController::class, 'initSystemRoles']);
+
+        // Impersonate Tenant (Enter Tenant Portal)
+        Route::post('/tenants/{tenant}/impersonate', [TenantController::class, 'impersonate']);
     });
 
     // Legacy tenant routes (backward compatibility)
