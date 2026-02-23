@@ -44,12 +44,14 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 - [x] **Revenue Points** - CRUD for collection locations
 - [x] **Businesses** - Registration with categories/sizes
 - [x] **Invoices** - CRUD, issue, bulk generation, payments, **PDF printing**
+- [x] **Bulk Invoices** - Advanced UI for bulk invoice generation
 - [x] **Tickets** - Batch creation, sell, verify, reports
 - [x] **Closings** - Daily/weekly revenue reconciliation
 - [x] **Consultants** - CRUD with portal access
 - [x] **Collectors** - Assignment management
 - [x] **Defaulters** - Detection and SMS reminders
 - [x] **Analytics** - Advanced statistics
+- [x] **Reports** - Comprehensive reports dashboard
 
 ### Settings (Per-Tenant)
 - [x] **Payment Gateway Settings** (PaymentPoint/PalmPay) - Live API integration ready
@@ -91,6 +93,8 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 │   │   │   │   ├── TenantController.php (with impersonation)
 │   │   │   │   ├── BusinessController.php (with portal methods)
 │   │   │   │   ├── ConsultantController.php (with dashboard)
+│   │   │   │   ├── BulkInvoiceController.php
+│   │   │   │   ├── ReportsController.php
 │   │   │   │   ├── InvoiceController.php
 │   │   │   │   ├── TicketController.php
 │   │   │   │   ├── RevenuePointController.php
@@ -126,9 +130,11 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
     │   ├── businesses/
     │   ├── invoices/
     │   │   ├── page.tsx
+    │   │   ├── bulk/page.tsx (Advanced Bulk Invoice UI)
     │   │   └── [id]/print/page.tsx (PDF view)
     │   ├── tickets/
     │   ├── closings/page.tsx
+    │   ├── reports/page.tsx
     │   ├── revenue-points/
     │   ├── revenue-items/
     │   ├── departments/page.tsx
@@ -164,6 +170,20 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 - `GET/POST /api/tenant/settings/payment` - Payment settings
 - `GET/POST /api/tenant/settings/sms` - SMS settings
 - `GET/PUT /api/tenant/templates/{id}` - Notification templates
+
+### Bulk Invoice Routes (`/api/bulk-invoices/*`)
+- `GET /api/bulk-invoices/businesses` - Get businesses with filters
+- `POST /api/bulk-invoices/preview` - Preview invoices before generation
+- `POST /api/bulk-invoices/generate` - Generate bulk invoices
+- `GET /api/bulk-invoices/history` - Get bulk generation history
+
+### Reports Routes (`/api/reports/*`)
+- `GET /api/reports/dashboard-analytics` - Dashboard analytics
+- `GET /api/reports/invoices` - Invoice report
+- `GET /api/reports/tickets` - Ticket report
+- `GET /api/reports/closings` - Closing report
+- `GET /api/reports/defaulters` - Defaulter report
+- `GET /api/reports/export` - Export reports to CSV
 
 ### Business Portal Routes (`/api/business/*`)
 - `GET /api/business/dashboard` - Business dashboard
@@ -233,10 +253,17 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 - [ ] Receipt/ticket printing for thermal printers
 
 ### P2 (Medium)
-- [ ] Advanced reporting with charts
+- [x] Advanced reporting with charts (**COMPLETED**)
 - [ ] Email notifications
 - [ ] Mobile app (React Native)
 
 ### P3 (Low)
 - [ ] Multi-language support
 - [ ] Custom domain per tenant
+
+## Environment Note
+This project uses Laravel (PHP) backend and Next.js frontend. The code is located in:
+- `/app/laravel-backend/` - Laravel API backend
+- `/app/nextjs-frontend/` - Next.js frontend
+
+**Note:** This environment may require PHP/MySQL setup to run the Laravel backend. The frontend can be tested independently with mocked API data.
