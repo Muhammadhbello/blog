@@ -282,4 +282,52 @@ class TenantController extends Controller
 
         return response()->json(['message' => 'Revenue share updated', 'tenant' => $tenant]);
     }
+
+    /**
+     * Impersonate a tenant (enter tenant portal as super admin)
+     */
+    public function impersonate(Tenant $tenant)
+    {
+        // Get the tenant's chairman (admin) user
+        $tenantAdmin = User::where('tenant_id', $tenant->id)
+            ->where('role', 'chairman')
+            ->first();
+
+        if (!$tenantAdmin) {
+            return response()->json([
+                'message' => 'No admin user found for this tenant',
+            ], 404);
+        }
+
+        // Generate impersonation token
+        $token = $tenantAdmin->createToken('impersonation-token', ['*'], now()->addHours(2));
+
+        AuditLog::log(
+            'impersonate',
+            'tenants',
+            'Tenant',
+            $tenant->id,
+            [
+                'tenant_name' => $tenant->name,
+                'impersonated_as' => $tenantAdmin->email,
+                'platform_admin' => auth()->user()->email,
+            ]
+        );
+
+        return response()->json([
+            'message' => 'Impersonation token generated',
+            'tenant' => $tenant,
+            'user' => [
+                'id' => $tenantAdmin->id,
+                'name' => $tenantAdmin->name,
+                'email' => $tenantAdmin->email,
+                'role' => $tenantAdmin->role,
+                'tenant_id' => $tenant->id,
+                'tenant' => $tenant,
+            ],
+            'token' => $token->plainTextToken,
+            'expires_at' => now()->addHours(2)->toISOString(),
+            'is_impersonation' => true,
+        ]);
+    }
 }
