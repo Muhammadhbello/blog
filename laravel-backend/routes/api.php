@@ -25,8 +25,12 @@ use App\Http\Controllers\Api\TenantUserController;
 use App\Http\Controllers\Api\CollectorAssignmentController;
 use App\Http\Controllers\Api\TenantSettingController;
 use App\Http\Controllers\Api\ClosingController;
+use App\Http\Controllers\Api\OfflineSyncController;
+use App\Http\Controllers\Api\BulkInvoiceController;
+use App\Http\Controllers\Api\ReportsController;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::post('/webhooks/payment', [WebhookController::class, 'handlePaymentWebhook']);
