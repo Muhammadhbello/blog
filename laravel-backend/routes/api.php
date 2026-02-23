@@ -163,6 +163,38 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ==========================================
+    // BULK INVOICE ROUTES
+    // ==========================================
+    Route::middleware(['role:chairman,treasurer,hod'])->prefix('bulk-invoices')->group(function () {
+        Route::get('/businesses', [BulkInvoiceController::class, 'getBusinessesForBulk']);
+        Route::post('/preview', [BulkInvoiceController::class, 'previewBulk']);
+        Route::post('/generate', [BulkInvoiceController::class, 'generateBulk']);
+        Route::get('/history', [BulkInvoiceController::class, 'getBulkHistory']);
+    });
+
+    // ==========================================
+    // REPORTS & ANALYTICS ROUTES
+    // ==========================================
+    Route::middleware(['role:chairman,treasurer,hod,auditor'])->prefix('reports')->group(function () {
+        Route::get('/dashboard-analytics', [ReportsController::class, 'getDashboardAnalytics']);
+        Route::get('/invoices', [ReportsController::class, 'getInvoiceReport']);
+        Route::get('/tickets', [ReportsController::class, 'getTicketReport']);
+        Route::get('/closings', [ReportsController::class, 'getClosingReport']);
+        Route::get('/defaulters', [ReportsController::class, 'getDefaulterReport']);
+        Route::get('/export', [ReportsController::class, 'exportReport']);
+    });
+
+    // ==========================================
+    // OFFLINE SYNC ROUTES
+    // ==========================================
+    Route::middleware(['role:collector,consultant'])->prefix('offline')->group(function () {
+        Route::post('/sync-tickets', [OfflineSyncController::class, 'syncTickets']);
+        Route::get('/tickets', [OfflineSyncController::class, 'getOfflineTickets']);
+        Route::get('/sync-history', [OfflineSyncController::class, 'getSyncHistory']);
+        Route::post('/register-device', [OfflineSyncController::class, 'registerDevice']);
+    });
+
+    // ==========================================
     // COLLECTOR SPECIFIC ROUTES
     // ==========================================
     Route::middleware(['role:collector'])->prefix('collector')->group(function () {
