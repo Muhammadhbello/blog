@@ -252,7 +252,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
       </nav>
 
       {/* Fixed Sidebar */}
-      <aside className="fixed left-0 top-16 bottom-0 w-64 bg-white/60 backdrop-blur-xl border-r border-gray-200/50 overflow-y-auto z-40">
+      <aside className={`fixed left-0 ${isImpersonation ? 'top-[6.5rem]' : 'top-16'} bottom-0 w-64 bg-white/60 backdrop-blur-xl border-r border-gray-200/50 overflow-y-auto z-40`}>
         <nav className="p-4 space-y-1">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-4">Main</p>
           {tenantNavItems.map((item) => {
