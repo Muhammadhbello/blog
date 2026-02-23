@@ -217,7 +217,7 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 
 ### P1 (High) - REMAINING
 - [ ] Offline POS sync queue
-- [ ] Advanced bulk invoice operations UI
+- [x] Advanced bulk invoice operations UI (**COMPLETED**)
 - [ ] Receipt/ticket printing for thermal printers
 
 ### P2 (Medium)
