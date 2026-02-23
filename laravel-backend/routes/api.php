@@ -146,6 +146,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('collector-assignments', CollectorAssignmentController::class);
         Route::get('/collectors', [CollectorAssignmentController::class, 'getCollectors']);
         Route::get('/collector-assignments-stats', [CollectorAssignmentController::class, 'stats']);
+
+        // Tenant Settings (Payment, SMS, Templates)
+        Route::get('/settings/payment', [TenantSettingController::class, 'getPaymentSettings']);
+        Route::post('/settings/payment', [TenantSettingController::class, 'savePaymentSettings']);
+        Route::get('/settings/sms', [TenantSettingController::class, 'getSmsSettings']);
+        Route::post('/settings/sms', [TenantSettingController::class, 'saveSmsSettings']);
+        Route::get('/templates', [TenantSettingController::class, 'getTemplates']);
+        Route::put('/templates/{id}', [TenantSettingController::class, 'updateTemplate']);
+        Route::get('/settings/general', [TenantSettingController::class, 'getGeneralSettings']);
+        Route::post('/settings/general', [TenantSettingController::class, 'updateGeneralSettings']);
     });
 
     // ==========================================
