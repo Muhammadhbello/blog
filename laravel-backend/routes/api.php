@@ -163,5 +163,27 @@ Route::middleware('auth:sanctum')->group(function () {
     // ==========================================
     Route::middleware(['role:collector'])->prefix('collector')->group(function () {
         Route::get('/my-assignments', [CollectorAssignmentController::class, 'getMyAssignments']);
+        Route::get('/my-closings', [ClosingController::class, 'myClosings']);
+        Route::get('/my-performance', [ClosingController::class, 'myPerformance']);
+    });
+
+    // ==========================================
+    // CONSULTANT PORTAL ROUTES
+    // ==========================================
+    Route::middleware(['role:consultant_admin,consultant'])->prefix('consultant')->group(function () {
+        Route::get('/dashboard', [ConsultantController::class, 'getDashboard']);
+        Route::get('/my-assignments', [ConsultantController::class, 'getMyAssignments']);
+        Route::get('/my-tickets', [TicketController::class, 'getMyTickets']);
+        Route::get('/my-closings', [ClosingController::class, 'myClosings']);
+        Route::get('/my-performance', [ClosingController::class, 'myPerformance']);
+    });
+
+    // ==========================================
+    // BUSINESS PORTAL ROUTES
+    // ==========================================
+    Route::middleware(['role:business_user'])->prefix('business')->group(function () {
+        Route::get('/dashboard', [BusinessController::class, 'portalDashboard']);
+        Route::get('/invoices', [InvoiceController::class, 'businessInvoices']);
+        Route::get('/profile', [BusinessController::class, 'portalProfile']);
     });
 });
