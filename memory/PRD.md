@@ -1,276 +1,221 @@
 # FlexCloud - Multi-Tenant Revenue Management SaaS
 
-## Product Requirements Document (PRD)
-
-### Overview
-FlexCloud is a multi-tenant Local Government Revenue Intelligence System for Nigerian LGAs. It provides comprehensive revenue collection, invoice management, ticket issuance, consultant management, and advanced analytics.
-
----
+## Overview
+FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intelligence, built with Laravel (PHP 8.3) backend and Next.js (React 18, TypeScript) frontend.
 
 ## Architecture
 
-### Multi-Tenant Database Strategy
-- **Platform Database:** `flexcloud_platform` - Contains tenants registry, platform users, platform settings
-- **Tenant Databases:** Each tenant has isolated database (e.g., `potiskum_tenant`, `damaturu_tenant`)
-- **Database Separation:** Complete data isolation between tenants for security and compliance
+### Multi-Database Tenancy
+- **Platform Database**: `flexcloud_platform` - Manages tenants and platform users
+- **Tenant Databases**: `flexcloud_tenant_{slug}` - Each tenant has isolated database
 
 ### Tech Stack
-- **Backend:** Laravel 11, PHP 8.3, MySQL 8.0
-- **Frontend:** Next.js 14, React 18, TypeScript
-- **Auth:** Laravel Sanctum (Token-based)
-- **Architecture:** API-First, Multi-Database Tenancy
+- **Backend**: Laravel 11, PHP 8.3
+- **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS
+- **Database**: MySQL 8.0 (multi-database)
+- **Authentication**: Laravel Sanctum
 
----
+## Implemented Features
 
-## Implementation Status
+### Platform Admin (Super Admin)
+- [x] Platform login page
+- [x] Tenant management (CRUD)
+- [x] Tenant creation with automatic:
+  - Database provisioning
+  - Migration running
+  - Admin user seeding
+- [x] Tenant status management (suspend/activate)
+- [x] **Enter Tenant Portal** (Impersonation) - Platform admin can access any tenant portal
+- [x] Platform audit logs
+- [x] Platform settings management
+- [x] Revenue share configuration per tenant
 
-### ✅ COMPLETED
+### Tenant Portal
+- [x] Tenant login page
+- [x] Dashboard with stats cards
+- [x] Sidebar navigation (independently scrollable)
+- [x] **Impersonation Banner** - Shows when platform admin is viewing tenant
 
-#### Phase 1: Core Infrastructure
-- [x] Multi-tenant database architecture design
-- [x] Platform migrations (platform_users, tenants, platform_audit_logs, platform_settings)
-- [x] Tenant migrations (14 migration files covering all modules)
-- [x] TenantDatabaseService for dynamic database management
-- [x] ResolveTenant middleware for tenant resolution
+### Tenant Modules
+- [x] **Wards** - CRUD management
+- [x] **Departments** - CRUD with HOD assignment
+- [x] **Revenue Categories** - CRUD management
+- [x] **Revenue Items** - CRUD with tariff configuration
+- [x] **Revenue Points** - CRUD for collection locations
+- [x] **Businesses** - Registration with categories/sizes
+- [x] **Invoices** - CRUD, issue, bulk generation, payments
+- [x] **Tickets** - Batch creation, sell, verify, reports
+- [x] **Closings** - Daily/weekly revenue reconciliation
+- [x] **Consultants** - CRUD with portal access
+- [x] **Collectors** - Assignment management
+- [x] **Defaulters** - Detection and SMS reminders
+- [x] **Analytics** - Advanced statistics
 
-#### Phase 2: Platform Admin
-- [x] Platform Dashboard with statistics
-- [x] Tenant Management (CRUD, suspend, activate)
-- [x] Subdomain-based tenant provisioning
-- [x] Platform User Management
-- [x] Platform Audit Logs
-- [x] Platform Settings
+### Settings (Per-Tenant)
+- [x] **Payment Gateway Settings** (PaymentPoint/PalmPay)
+- [x] **SMS Gateway Settings** (Termii)
+- [x] **Notification Templates** - SMS templates with placeholders
+- [x] **General Settings** - Tenant configuration
 
-#### Phase 3: Tenant Admin
-- [x] Tenant Layout with sticky sidebar
-- [x] User Management for tenants
-- [x] Role & Permission Management
-- [x] Collector Assignment Management
-- [x] Tenant Audit Logs
+### Roles & Permissions
+- [x] Chairman - Full access
+- [x] Treasurer - Finance operations
+- [x] HOD - Department-scoped access
+- [x] Collector - Ticket selling, closings
+- [x] Consultant - Portal with scoped data
+- [x] Business User - Portal with invoices/payments
+- [x] Auditor - Read-only access
 
-#### Phase 4: Backend Services
-- [x] PaymentGatewayService (PaymentPoint, PalmPay)
-- [x] SMSService (Termii, Twilio, Africa's Talking)
-- [x] InvoiceService (CRUD, bulk generation, payments)
-- [x] TicketService (batches, issuance, verification)
-- [x] ClosingService (daily/weekly closings, variance detection)
+## File Structure
 
-### ⏳ IN PROGRESS
+```
+/app/
+├── laravel-backend/
+│   ├── app/
+│   │   ├── Http/
+│   │   │   ├── Controllers/Api/
+│   │   │   │   ├── AuthController.php
+│   │   │   │   ├── TenantController.php
+│   │   │   │   ├── BusinessController.php
+│   │   │   │   ├── InvoiceController.php
+│   │   │   │   ├── TicketController.php
+│   │   │   │   ├── RevenuePointController.php
+│   │   │   │   ├── ClosingController.php
+│   │   │   │   ├── TenantSettingController.php
+│   │   │   │   └── ...
+│   │   │   └── Middleware/
+│   │   │       ├── ResolveTenant.php
+│   │   │       └── CheckRole.php
+│   │   ├── Models/
+│   │   └── Services/
+│   │       ├── TenantDatabaseService.php
+│   │       ├── InvoiceService.php
+│   │       ├── TicketService.php
+│   │       ├── ClosingService.php
+│   │       ├── PaymentGatewayService.php
+│   │       └── SMSService.php
+│   ├── database/migrations/
+│   │   ├── platform/
+│   │   └── tenant/
+│   └── routes/api.php
+│
+└── nextjs-frontend/
+    ├── app/
+    │   ├── login/
+    │   ├── dashboard/
+    │   ├── platform/
+    │   │   ├── dashboard/
+    │   │   ├── tenants/
+    │   │   └── users/
+    │   ├── businesses/
+    │   ├── invoices/
+    │   ├── tickets/
+    │   ├── closings/
+    │   ├── revenue-points/
+    │   ├── revenue-items/
+    │   ├── departments/
+    │   ├── wards/
+    │   ├── consultants/
+    │   ├── collectors/
+    │   ├── defaulters/
+    │   ├── analytics/
+    │   ├── settings/
+    │   └── admin/
+    └── components/
+        ├── TenantLayout.tsx
+        └── PlatformLayout.tsx
+```
 
-#### Phase 5: Frontend UI Pages
-- [ ] Revenue Points management page
-- [ ] Business Registration (with size/category)
-- [ ] Invoice Management (bulk, PDF, print)
-- [ ] Ticket Batches & Issuance
-- [ ] Closings workflow
-- [ ] Settings pages (Payment, SMS, Templates)
+## API Endpoints
 
-#### Phase 6: Consultant Portal
-- [ ] Consultant Dashboard
-- [ ] My Assignments page
-- [ ] Ticket selling interface
-- [ ] Closing submission
+### Platform Routes (`/api/platform/*`)
+- `POST /api/platform/tenants` - Create tenant
+- `GET /api/platform/tenants` - List tenants
+- `POST /api/platform/tenants/{id}/impersonate` - Enter tenant portal
+- `POST /api/platform/tenants/{id}/suspend` - Suspend tenant
+- `POST /api/platform/tenants/{id}/activate` - Activate tenant
 
-#### Phase 7: Business Portal
-- [ ] Business login
-- [ ] Business Dashboard (account info, invoices, balance)
-- [ ] Payment history
+### Tenant Routes
+- `GET/POST /api/revenue-points` - Revenue points CRUD
+- `GET/POST /api/closings` - Closings management
+- `POST /api/closings/{id}/approve` - Approve closing
+- `POST /api/closings/{id}/reject` - Reject closing
+- `GET/POST /api/tenant/settings/payment` - Payment settings
+- `GET/POST /api/tenant/settings/sms` - SMS settings
+- `GET/PUT /api/tenant/templates/{id}` - Notification templates
 
----
+### Business Portal Routes (`/api/business/*`)
+- `GET /api/business/dashboard` - Business dashboard
+- `GET /api/business/invoices` - Business invoices
+- `GET /api/business/profile` - Business profile
 
 ## Database Schema
 
-### Platform Database Tables
-1. `platform_users` - Super admins, support staff
-2. `tenants` - Tenant registry with db_name, subdomain, status
-3. `platform_audit_logs` - Platform-level activity tracking
-4. `platform_settings` - Global configuration
+### Platform Database
+- `tenants` - Tenant registry
+- `platform_users` - Super admin users
+- `platform_audit_logs` - Platform actions log
 
-### Tenant Database Tables
-1. `tenant_users` - Staff accounts with roles
-2. `wards` - Geographic divisions
-3. `departments` - Organizational units
-4. `revenue_categories` - Revenue classification
-5. `revenue_items` - Individual revenue sources
-6. `tariff_rules` - Pricing by business size/category
-7. `revenue_points` - Collection locations
-8. `businesses` - Registered businesses with virtual accounts
-9. `consultants` - External/internal consultants
-10. `consultant_assignments` - Point/item assignments
-11. `invoices` - Invoice records
-12. `invoice_items` - Invoice line items
-13. `invoice_payments` - Payment records
-14. `ticket_batches` - Controlled ticket ranges
-15. `tickets` - Individual tickets
-16. `ticket_payments` - Ticket payment records
-17. `closings` - Daily/weekly reconciliation
-18. `payment_settings` - Per-tenant payment config
-19. `sms_settings` - Per-tenant SMS config
-20. `notification_templates` - SMS/email templates
-21. `tenant_settings` - Tenant configuration
-22. `tenant_audit_logs` - Activity tracking
-23. `defaulters` - Overdue invoice tracking
-24. `sms_logs` - SMS delivery logs
-25. `tenant_roles` - Custom roles
-26. `tenant_role_user` - Role assignments
+### Tenant Database (per tenant)
+- `tenant_users` - Tenant users with roles
+- `wards` - Administrative wards
+- `departments` - Organization departments
+- `revenue_categories` - Revenue categories
+- `revenue_items` - Revenue items with tariffs
+- `revenue_points` - Collection locations
+- `businesses` - Registered businesses
+- `invoices` / `invoice_items` / `invoice_payments`
+- `ticket_batches` / `tickets` / `ticket_payments`
+- `closings` - Revenue reconciliation
+- `consultants` / `consultant_assignments`
+- `payment_settings` - Per-tenant payment config
+- `sms_settings` - Per-tenant SMS config
+- `notification_templates` - SMS/email templates
 
----
+## Testing Credentials
 
-## Roles & Permissions
+### Platform Admin
+- Email: admin@flexcloud.ng
+- Password: password123
 
-### Platform Roles
-- **super_admin** - Full platform access
-- **support_admin** - Limited platform support
-- **finance_admin** - Platform financial reporting
-
-### Tenant Roles
-- **chairman** - Full tenant access
-- **treasurer** - Financial management, reconciliation
-- **hod** - Department-scoped access
-- **consultant_admin** - Consultant portal access
-- **collector** - Ticket selling only
-- **auditor** - Read-only audit access
-- **agent_admin** - Business registration only
-- **business_user** - Business portal access
-
----
-
-## API Endpoints Summary
-
-### Platform APIs
-```
-POST /api/platform/tenants - Create tenant (with database)
-GET  /api/platform/tenants - List tenants
-PUT  /api/platform/tenants/{id} - Update tenant
-POST /api/platform/tenants/{id}/suspend - Suspend tenant
-POST /api/platform/tenants/{id}/activate - Activate tenant
-GET  /api/platform/users - Platform users
-GET  /api/platform/audit-logs - Platform audit logs
-GET  /api/platform/settings - Platform settings
-```
-
-### Tenant APIs
-```
-# User Management
-GET  /api/tenant/users - List tenant users
-POST /api/tenant/users - Create user
-PUT  /api/tenant/users/{id} - Update user
-GET  /api/tenant/roles - List roles
-POST /api/tenant/roles - Create custom role
-
-# Core Resources
-CRUD /api/wards
-CRUD /api/departments
-CRUD /api/revenue-categories
-CRUD /api/revenue-items
-CRUD /api/revenue-points
-CRUD /api/businesses
-
-# Invoices
-POST /api/invoices - Create invoice
-POST /api/invoices/bulk - Bulk generate
-POST /api/invoices/{id}/issue - Issue invoice
-POST /api/invoices/{id}/payment - Record payment
-
-# Tickets
-POST /api/tickets/batch - Create batch
-POST /api/tickets/sell - Sell ticket
-POST /api/tickets/verify - Verify ticket
-
-# Closings
-POST /api/closings - Submit closing
-POST /api/closings/{id}/approve - Approve
-POST /api/closings/{id}/reject - Reject
-```
-
----
-
-## Test Credentials
-
-### Platform
-- **Super Admin:** admin@flexcloud.com / password123
-
-### Demo Tenant (if created)
-- **Chairman:** chairman@demo-lga.gov / password123
-- **Treasurer:** treasurer@demo-lga.gov / password123
-- **Collector:** collector@demo-lga.gov / password123
-
----
-
-## Third-Party Integrations
-
-### Payment Gateways (Per Tenant)
-- **PaymentPoint** - Virtual account generation
-- **PalmPay** - Virtual account generation
-- Both support webhook-based payment notifications
-
-### SMS Providers (Per Tenant)
-- **Termii** - Primary provider
-- **Twilio** - Alternative
-- **Africa's Talking** - Alternative
-
----
-
-## Key Features
-
-### Anti-Fraud Controls (Ticket System)
-1. Batch-based ticket issuance with controlled ranges
-2. Assignment validation (collector must be assigned to batch)
-3. Validity period enforcement
-4. Cancellation requires approval
-5. Variance detection in closings (>5% flagged)
-6. Complete audit trail
-
-### Invoice Features
-1. Tariff-based pricing by business size/category
-2. Partial payments supported
-3. Automatic defaulter tracking
-4. Bulk generation by criteria
-5. SMS notifications on issue/payment
-6. Payment link generation
-
-### Revenue Share Engine
-- Configurable per tenant (percentage or fixed)
-- Calculated at transaction time
-- Separate platform_fee and net_lga_amount tracking
-
----
-
-## Next Steps (Priority Order)
-
-### P0 - Critical
-1. Complete tenant frontend pages (businesses, invoices, tickets)
-2. Implement consultant portal
-3. Test payment gateway integration
-
-### P1 - Important
-1. Business portal for registered businesses
-2. Offline POS sync mechanism
-3. PDF invoice generation
-
-### P2 - Nice to Have
-1. Advanced analytics dashboard
-2. Ward heatmap visualization
-3. Mobile-responsive optimization
+### Tenant Admin (created per tenant)
+- Set during tenant creation
 
 ---
 
 ## Changelog
 
-### 2025-02-23
-- Created comprehensive multi-tenant database architecture
-- Implemented 14 tenant migration files
-- Created services: TenantDatabase, PaymentGateway, SMS, Invoice, Ticket, Closing
-- Built Platform Admin UI with sticky sidebar
-- Built Tenant Admin UI with user/role management
+### December 2025
+- Initial multi-tenant architecture implementation
+- Platform admin dashboard and tenant management
+- Tenant portal with all core modules
+- Revenue points and closings management
+- Business and consultant portals
+- Per-tenant payment/SMS settings
+- Impersonation feature for platform admin
+- RBAC implementation
 
-### 2025-02-22
-- Enhanced tenant model with subdomain support
-- Created platform user management
-- Created audit log system
-- Created collector assignment system
+## Roadmap
 
-### 2025-02-21
-- Initial project setup (Laravel + Next.js)
-- Basic authentication with Sanctum
-- Core CRUD modules (Wards, Departments, Businesses, Invoices)
+### P0 (Critical)
+- [x] Multi-database tenancy core
+- [x] Platform admin dashboard
+- [x] Tenant modules (Wards, Departments, Revenue Points)
+- [x] Invoicing system
+- [x] Ticketing system
+- [x] Closings management
+
+### P1 (High)
+- [ ] Live payment gateway integration (PaymentPoint/PalmPay)
+- [ ] Live SMS integration (Termii)
+- [ ] Invoice PDF generation
+- [ ] Offline POS sync
+
+### P2 (Medium)
+- [ ] Advanced reporting
+- [ ] Email notifications
+- [ ] Mobile app (React Native)
+
+### P3 (Low)
+- [ ] Multi-language support
+- [ ] Custom domain per tenant
