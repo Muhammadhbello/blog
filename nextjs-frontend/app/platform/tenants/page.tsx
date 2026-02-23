@@ -34,11 +34,12 @@ interface Stats {
 
 export default function PlatformTenantsPage() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, login } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [impersonating, setImpersonating] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [formData, setFormData] = useState({
