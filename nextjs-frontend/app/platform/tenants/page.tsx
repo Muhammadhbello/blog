@@ -116,6 +116,32 @@ export default function PlatformTenantsPage() {
     }
   };
 
+  const enterTenantPortal = async (tenant: Tenant) => {
+    if (tenant.status !== 'active') {
+      alert('Cannot enter suspended tenant portal');
+      return;
+    }
+    
+    setImpersonating(tenant.id);
+    try {
+      const response = await apiClient.post(`/platform/tenants/${tenant.id}/impersonate`);
+      const { token, user: impersonatedUser } = response.data;
+      
+      // Store the impersonation token and user data
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(impersonatedUser));
+      localStorage.setItem('is_impersonation', 'true');
+      localStorage.setItem('platform_return', 'true');
+      
+      // Redirect to tenant dashboard
+      window.location.href = '/dashboard';
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to enter tenant portal');
+    } finally {
+      setImpersonating(null);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
