@@ -88,6 +88,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('departments', DepartmentController::class);
         Route::apiResource('revenue-categories', RevenueCategoryController::class);
         Route::apiResource('revenue-items', RevenueItemController::class);
+        Route::apiResource('revenue-points', RevenuePointController::class);
+        Route::get('/revenue-points-stats', [RevenuePointController::class, 'stats']);
         Route::apiResource('businesses', BusinessController::class);
         Route::apiResource('invoices', InvoiceController::class);
 
@@ -97,6 +99,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tickets', [TicketController::class, 'getTickets']);
         Route::post('/tickets/sell', [TicketController::class, 'sellTicket']);
         Route::post('/tickets/verify', [TicketController::class, 'verifyTicket']);
+
+        // Closings
+        Route::get('/closings', [ClosingController::class, 'index']);
+        Route::post('/closings', [ClosingController::class, 'store']);
+        Route::get('/closings/pending', [ClosingController::class, 'pending']);
+        Route::get('/closings/flagged', [ClosingController::class, 'flagged']);
+        Route::get('/closings/stats', [ClosingController::class, 'stats']);
+        Route::get('/closings/calculate-expected', [ClosingController::class, 'calculateExpected']);
+        Route::get('/closings/{id}', [ClosingController::class, 'show']);
+        Route::post('/closings/{id}/approve', [ClosingController::class, 'approve']);
+        Route::post('/closings/{id}/reject', [ClosingController::class, 'reject']);
 
         // Defaulters
         Route::post('/defaulters/detect', [DefaulterController::class, 'detectDefaulters']);
