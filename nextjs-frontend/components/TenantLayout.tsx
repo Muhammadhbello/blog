@@ -322,7 +322,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
       </aside>
 
       {/* Main Content Area */}
-      <main className="ml-64 pt-16 min-h-screen">
+      <main className={`ml-64 ${isImpersonation ? 'pt-[6.5rem]' : 'pt-16'} min-h-screen`}>
         <div className="p-8">
           {children}
         </div>
