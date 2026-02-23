@@ -178,11 +178,45 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
   const { user, logout } = useAuth();
 
   const isChairman = user?.role === 'chairman';
+  
+  // Check if this is an impersonation session
+  const isImpersonation = typeof window !== 'undefined' && localStorage.getItem('is_impersonation') === 'true';
+
+  const returnToPlatform = () => {
+    // Clear impersonation flags
+    localStorage.removeItem('is_impersonation');
+    localStorage.removeItem('platform_return');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Redirect to platform login
+    window.location.href = '/login';
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Impersonation Banner */}
+      {isImpersonation && (
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2 px-4 flex items-center justify-center space-x-4">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-sm font-medium">You are viewing this tenant as Platform Admin</span>
+          <button
+            onClick={returnToPlatform}
+            className="px-4 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-semibold transition flex items-center space-x-2"
+            data-testid="return-to-platform-btn"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+            </svg>
+            <span>Return to Platform</span>
+          </button>
+        </div>
+      )}
+
       {/* Fixed Top Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/50 h-16">
+      <nav className={`fixed ${isImpersonation ? 'top-10' : 'top-0'} left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/50 h-16`}>
         <div className="h-full px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
