@@ -52,12 +52,16 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 - [x] **Defaulters** - Detection and SMS reminders
 - [x] **Analytics** - Advanced statistics
 - [x] **Reports** - Comprehensive reports dashboard
+- [x] **Offline POS Sync** - Download tickets, offline sales, sync queue
+- [x] **Receipt/Ticket Printing** - Thermal printer support (58mm/80mm)
 
 ### Settings (Per-Tenant)
 - [x] **Payment Gateway Settings** (PaymentPoint/PalmPay) - Live API integration ready
 - [x] **SMS Gateway Settings** (Termii/Twilio/AfricasTalking) - Live API integration ready
 - [x] **Notification Templates** - SMS templates with placeholders
+- [x] **Email Notifications** - SMTP/SendGrid/Mailgun configuration
 - [x] **General Settings** - Tenant configuration
+- [x] **Print Settings** - Paper size, QR code, logo, footer text
 
 ### Portals
 - [x] **Business Portal** - Dedicated dashboard for businesses
