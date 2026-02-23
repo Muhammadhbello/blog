@@ -306,10 +306,27 @@ export default function PlatformTenantsPage() {
             {/* Actions */}
             <div className="flex space-x-2">
               <button
-                onClick={() => router.push(`/platform/tenants/${tenant.id}`)}
-                className="flex-1 px-3 py-2 text-xs font-medium text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-500/10 transition"
+                onClick={() => enterTenantPortal(tenant)}
+                disabled={impersonating === tenant.id || tenant.status !== 'active'}
+                className="flex-1 px-3 py-2 text-xs font-medium bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition disabled:opacity-50 flex items-center justify-center space-x-1"
+                data-testid={`enter-tenant-${tenant.id}`}
               >
-                View Details
+                {impersonating === tenant.id ? (
+                  <span>Entering...</span>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Enter Portal</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => router.push(`/platform/tenants/${tenant.id}`)}
+                className="px-3 py-2 text-xs font-medium text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-500/10 transition"
+              >
+                Details
               </button>
               {tenant.status === 'active' ? (
                 <button
