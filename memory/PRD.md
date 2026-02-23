@@ -200,9 +200,58 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 - `GET /api/consultant/my-tickets` - My tickets
 - `GET /api/consultant/my-closings` - My closings
 
+### Offline Sync Routes (`/api/offline/*`)
+- `GET /api/offline/tickets` - Get tickets for offline download
+- `POST /api/offline/sync-tickets` - Sync offline ticket sales
+- `GET /api/offline/sync-history` - Get sync history
+- `POST /api/offline/register-device` - Register a POS device
+
+### Email Notification Routes (`/api/notifications/*`)
+- `GET /api/notifications/email/settings` - Get email settings
+- `POST /api/notifications/email/settings` - Save email settings
+- `POST /api/notifications/email/test` - Send test email
+- `GET /api/notifications/email/templates` - Get email templates
+- `PUT /api/notifications/email/templates/{id}` - Update template
+- `GET /api/notifications/email/logs` - Get email logs
+- `GET /api/notifications/email/stats` - Get email statistics
+- `POST /api/notifications/email/bulk` - Send bulk email
+
+### Print Routes (`/api/print/*`)
+- `GET /api/print/ticket/{id}` - Get ticket print data
+- `GET /api/print/batch/{id}/tickets` - Get batch tickets for printing
+- `GET /api/print/payment/{id}/receipt` - Get payment receipt data
+- `GET /api/print/invoice/{id}` - Get invoice print data
+- `GET /api/print/closing/{id}/receipt` - Get closing receipt data
+- `POST /api/print/settings` - Update print settings
+
 ---
 
 ## Changelog
+
+### December 2025 (Session 4)
+- Added **Offline POS Sync** system:
+  - Device registration for POS terminals
+  - Download tickets for offline sales
+  - Queue management for pending syncs
+  - Sync history and tracking
+  - Local storage integration
+- Added **Email Notifications** management:
+  - SMTP/SendGrid/Mailgun configuration
+  - Email template management
+  - Email logs and statistics
+  - Bulk email sending to businesses
+  - Test email functionality
+- Added **Receipt/Ticket Printing** for thermal printers:
+  - Support for 58mm and 80mm thermal paper
+  - Ticket receipt printing
+  - Payment receipt printing
+  - Invoice printing (A4)
+  - Closing receipt printing
+  - QR code support
+  - Print settings configuration
+- Added backend controllers: `NotificationController`, `PrintController`
+- Added database migration for email_settings, email_logs, offline_devices, offline_sync_logs
+- Updated sidebar with "Offline Sync" and "Email Notifications" links
 
 ### December 2025 (Session 3)
 - Added **Advanced Bulk Invoice UI** at `/invoices/bulk`:
