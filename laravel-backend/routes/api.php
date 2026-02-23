@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\WardController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\RevenueCategoryController;
 use App\Http\Controllers\Api\RevenueItemController;
+use App\Http\Controllers\Api\RevenuePointController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\DefaulterController;
 use App\Http\Controllers\Api\ConsultantController;
@@ -22,6 +23,8 @@ use App\Http\Controllers\Api\PlatformSettingController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TenantUserController;
 use App\Http\Controllers\Api\CollectorAssignmentController;
+use App\Http\Controllers\Api\TenantSettingController;
+use App\Http\Controllers\Api\ClosingController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
