@@ -28,6 +28,8 @@ use App\Http\Controllers\Api\ClosingController;
 use App\Http\Controllers\Api\OfflineSyncController;
 use App\Http\Controllers\Api\BulkInvoiceController;
 use App\Http\Controllers\Api\ReportsController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PrintController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/auth/login', [AuthController::class, 'login']);
