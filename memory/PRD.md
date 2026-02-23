@@ -180,6 +180,18 @@ FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intellige
 
 ## Changelog
 
+### December 2025 (Session 3)
+- Added **Advanced Bulk Invoice UI** at `/invoices/bulk`:
+  - Business filtering by ward, department, size, business type
+  - Multiple revenue item selection
+  - Tariff configuration by business size (small/medium/large)
+  - Preview before generation
+  - Batch invoice generation with results summary
+  - SMS notification option
+- Added "Bulk Invoices" link to sidebar navigation
+- Added "Bulk Generate" button to Invoices page
+- Added "Reports" link to sidebar navigation
+
 ### December 2025 (Session 2)
 - Added Business Portal frontend with virtual account, invoices, payments
 - Added Consultant Portal frontend with stats, assignments, tickets, closings
