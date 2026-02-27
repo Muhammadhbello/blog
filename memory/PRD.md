@@ -380,6 +380,31 @@ To run this application:
 ## Changelog
 
 ### December 2025 (Current Session - Documentation & Templates)
+**Platform Payouts Module:**
+- Created `/app/nextjs-frontend/app/platform/payouts/page.tsx` with:
+  - Stats dashboard (pending, completed, avg processing time, platform earnings)
+  - Payout requests table with bulk selection
+  - Process single or bulk payouts
+  - Payout details modal with bank info
+  - Status badges and filters
+- Created `PayoutController.php` with full CRUD and processing logic
+
+**Platform Reconciliation Module:**
+- Created `/app/nextjs-frontend/app/platform/reconciliation/page.tsx` with:
+  - Reconciliation stats (match rate, unmatched, disputed)
+  - Transaction list with filtering
+  - Reconciliation periods tab
+  - Manual transaction resolution (match/reject/dispute)
+  - Transaction details modal
+- Created `ReconciliationController.php` with automated reconciliation logic
+
+**Database Migrations:**
+- Created `2025_01_20_000001_create_payouts_and_reconciliation_tables.php`:
+  - `payouts` - Tenant payout tracking
+  - `tenant_bank_accounts` - Bank details for payouts
+  - `reconciliation_periods` - Reconciliation batch tracking
+  - `reconciliation_records` - Individual transaction records
+
 **Email Template Editor Enhancements:**
 - Added test email modal with recipient address input
 - Added HTML formatting button (auto-format code)
