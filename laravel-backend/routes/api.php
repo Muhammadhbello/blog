@@ -323,6 +323,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/backup/{backupId}/progress', [NotificationController::class, 'getBackupProgress']);
         Route::get('/restore/{restoreId}/progress', [NotificationController::class, 'getRestoreProgress']);
         Route::get('/sms/{batchId}/progress', [NotificationController::class, 'getSmsProgress']);
+        Route::post('/pusher/auth', [NotificationController::class, 'pusherAuth']);
+        Route::get('/pusher/config', [NotificationController::class, 'getPusherConfig']);
     });
 
     // ==========================================
