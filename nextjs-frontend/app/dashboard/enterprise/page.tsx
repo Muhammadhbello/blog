@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import TenantLayout from '@/components/TenantLayout';
+import EnhancedTenantLayout from '@/components/layout/EnhancedTenantLayout';
 import apiClient from '@/lib/api';
 import Link from 'next/link';
 import { toast } from 'sonner';
