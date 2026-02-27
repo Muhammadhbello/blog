@@ -129,6 +129,12 @@ class SubdomainResolver
         $host = $request->getHost();
         $parts = explode('.', $host);
         
+        // Method 0: Check for custom domain first (full host match)
+        $customDomainTenant = $this->resolveFromCustomDomain($host);
+        if ($customDomainTenant) {
+            return $customDomainTenant;
+        }
+        
         // Need at least 2 parts for subdomain (e.g., tenant.flexcloud.test)
         if (count($parts) < 2) {
             return null;
@@ -148,6 +154,20 @@ class SubdomainResolver
 
         return Tenant::where('subdomain', $subdomain)
             ->orWhere('slug', $subdomain)
+            ->first();
+    }
+
+    /**
+     * Resolve tenant from custom domain
+     */
+    protected function resolveFromCustomDomain(string $host): ?Tenant
+    {
+        // Remove www. prefix if present
+        $host = preg_replace('/^www\./', '', strtolower($host));
+        
+        // Look for tenant with verified custom domain
+        return Tenant::where('custom_domain', $host)
+            ->where('custom_domain_verified', true)
             ->first();
     }
 
