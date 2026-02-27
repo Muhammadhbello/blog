@@ -633,6 +633,72 @@ export default function EmailTemplatesPage() {
           </div>
         </div>
       </div>
+
+      {/* Test Email Modal */}
+      {showTestModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <TestTube className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Send Test Email</h3>
+                  <p className="text-sm text-gray-500">Preview how the email will appear</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Recipient Email Address
+                </label>
+                <input
+                  type="email"
+                  value={testEmailAddress}
+                  onChange={(e) => setTestEmailAddress(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  placeholder="test@example.com"
+                />
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-blue-700">
+                    The test email will use sample data to populate placeholders. This helps verify formatting before sending to real recipients.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setShowTestModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sendTestEmail}
+                disabled={sendingTest || !testEmailAddress}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+              >
+                {sendingTest ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Send Test
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </EnhancedTenantLayout>
   );
 }
