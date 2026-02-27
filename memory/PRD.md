@@ -265,8 +265,26 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - `GET/POST /api/closings` - Closings management
 - `POST /api/closings/{id}/approve` - Approve closing
 - `POST /api/closings/{id}/reject` - Reject closing
-- `GET/POST /api/tenant/settings/payment` - Payment settings
-- `GET/POST /api/tenant/settings/sms` - SMS settings
+
+### Tenant Settings Routes
+- `GET /api/tenant/settings/payment` - Get all payment provider settings
+- `POST /api/tenant/settings/payment` - Save payment provider settings
+- `POST /api/tenant/settings/payment/test` - Test payment connection
+- `GET /api/tenant/settings/sms` - Get all SMS provider settings
+- `POST /api/tenant/settings/sms` - Save SMS provider settings
+- `POST /api/tenant/settings/sms/test` - Test SMS connection
+- `GET /api/tenant/templates` - Get message templates
+- `PUT /api/tenant/templates/{id}` - Update message template
+- `POST /api/tenant/templates/preview` - Preview template with sample data
+- `GET/POST /api/tenant/settings/general` - General settings
+
+### Tenant Audit Logs Routes
+- `GET /api/tenant/audit-logs` - Get paginated audit logs
+- `GET /api/tenant/audit-logs/stats` - Get audit statistics
+- `GET /api/tenant/audit-logs/modules` - Get available modules
+- `GET /api/tenant/audit-logs/actions` - Get available actions
+- `GET /api/tenant/audit-logs/entity/{type}/{id}` - Get entity history
+- `GET /api/tenant/audit-logs/export` - Export logs as CSV
 
 ### Defaulter Routes (Bulk SMS)
 - `POST /api/defaulters/detect` - Detect defaulters
