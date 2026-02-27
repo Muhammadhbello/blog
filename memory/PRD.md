@@ -1,19 +1,41 @@
 # FlexCloud - Multi-Tenant Revenue Management SaaS
 
 ## Overview
-FlexCloud is a multi-tenant SaaS platform for Local Government Revenue Intelligence, built with Laravel (PHP 8.3) backend and Next.js (React 18, TypeScript) frontend.
+FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Government Revenue Intelligence, built with Laravel (PHP 8.3) backend and Next.js (React 18, TypeScript) frontend.
 
 ## Architecture
 
 ### Multi-Database Tenancy
-- **Platform Database**: `flexcloud_platform` - Manages tenants and platform users
-- **Tenant Databases**: `flexcloud_tenant_{slug}` - Each tenant has isolated database
+- **Platform Database**: `flexcloud_platform` - Central SaaS control, revenue share rules, audit logs
+- **Tenant Databases**: `{slug}_tenant` - Each LGA has physically isolated database
+- **Subdomain Resolution**: `{tenant}.flexcloud.ng` routes to tenant database
 
 ### Tech Stack
 - **Backend**: Laravel 11, PHP 8.3
 - **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS
-- **Database**: MySQL 8.0 (multi-database)
-- **Authentication**: Laravel Sanctum
+- **Database**: MySQL 8.0 (multi-database, physical isolation)
+- **Authentication**: Laravel Sanctum (scoped per database)
+- **UI Framework**: Shadcn/UI + Custom Enterprise Components
+
+### Enterprise Features (NEW)
+- [x] **Subdomain-based Tenancy**: `{tenant}.flexcloud.ng` → automatic DB switching
+- [x] **Revenue Share System**: Platform-level revenue split (5% default)
+  - Percentage model (default 5%)
+  - Tiered model (volume-based discounts)
+  - Flat monthly fee model
+  - Hybrid model (base + percentage)
+  - Category/Item overrides
+- [x] **Enterprise UI/UX**:
+  - Glassmorphism design (`bg-white/80 backdrop-blur-xl`)
+  - Animated number counters
+  - Bento grid layouts
+  - Sparkline mini-charts
+  - Progress rings
+  - Skeleton loaders (shimmer effect)
+  - View mode toggle (Comfortable/Compact)
+- [x] **Enhanced Middleware Stack**:
+  - SubdomainResolver → SwitchDB → auth:sanctum → RoleCheck
+- [x] **Platform Audit Logging**: Impersonation tracking, tenant creation logs
 
 ## Implemented Features
 
