@@ -5,15 +5,115 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\EmailService;
+use App\Services\BroadcastService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class NotificationController extends Controller
 {
     protected EmailService $emailService;
+    protected BroadcastService $broadcastService;
 
-    public function __construct(EmailService $emailService)
+    public function __construct(EmailService $emailService, BroadcastService $broadcastService)
     {
         $this->emailService = $emailService;
+        $this->broadcastService = $broadcastService;
+    }
+
+    // ==========================================
+    // REAL-TIME NOTIFICATIONS (POLLING)
+    // ==========================================
+
+    /**
+     * Poll for real-time updates (fallback for WebSocket)
+     */
+    public function poll(Request $request)
+    {
+        $channel = $request->get('channel', 'platform.notifications');
+        $since = $request->get('since');
+        
+        $messages = $this->broadcastService->getRecentMessages($channel, $since);
+        
+        return response()->json([
+            'messages' => $messages,
+            'timestamp' => now()->toISOString(),
+        ]);
+    }
+
+    /**
+     * Get backup progress
+     */
+    public function getBackupProgress(string $backupId)
+    {
+        $progress = $this->broadcastService->getProgress('backup', $backupId);
+        
+        if (!$progress) {
+            // Check database for backup status
+            $backup = DB::table('backup_records')->where('id', $backupId)->first();
+            if ($backup) {
+                $progress = [
+                    'type' => 'backup_progress',
+                    'backup_id' => $backupId,
+                    'progress' => $backup->status === 'completed' ? 100 : ($backup->status === 'failed' ? 0 : 50),
+                    'status' => $backup->status,
+                    'message' => $backup->message ?? '',
+                ];
+            }
+        }
+        
+        return response()->json($progress ?? ['status' => 'not_found']);
+    }
+
+    /**
+     * Get restore progress
+     */
+    public function getRestoreProgress(string $restoreId)
+    {
+        $progress = $this->broadcastService->getProgress('restore', $restoreId);
+        
+        if (!$progress) {
+            $restore = DB::table('restore_records')->where('id', $restoreId)->first();
+            if ($restore) {
+                $progress = [
+                    'type' => 'restore_progress',
+                    'restore_id' => $restoreId,
+                    'progress' => $restore->status === 'completed' ? 100 : ($restore->status === 'failed' ? 0 : 50),
+                    'status' => $restore->status,
+                    'message' => $restore->message ?? '',
+                ];
+            }
+        }
+        
+        return response()->json($progress ?? ['status' => 'not_found']);
+    }
+
+    /**
+     * Get SMS batch progress
+     */
+    public function getSmsProgress(string $batchId)
+    {
+        $progress = $this->broadcastService->getProgress('sms', $batchId);
+        
+        return response()->json($progress ?? ['status' => 'not_found']);
+    }
+
+    /**
+     * Subscribe to channel (returns initial state)
+     */
+    public function subscribe(Request $request)
+    {
+        $channels = $request->get('channels', []);
+        $initialData = [];
+
+        foreach ($channels as $channel) {
+            $initialData[$channel] = $this->broadcastService->getRecentMessages($channel, null);
+        }
+
+        return response()->json([
+            'subscribed' => $channels,
+            'initial_data' => $initialData,
+            'timestamp' => now()->toISOString(),
+        ]);
     }
 
     /**
