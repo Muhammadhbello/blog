@@ -23,6 +23,7 @@ import {
   LogOut,
   Menu,
   X,
+  Scale,
 } from 'lucide-react';
 
 interface MenuItem {
