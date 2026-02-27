@@ -55,23 +55,23 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - [x] Platform audit logs
 - [x] Platform settings management
 - [x] Revenue share configuration per tenant
-- [x] **Custom Domain Management** (NEW)
+- [x] **Custom Domain Management**
   - Set custom domains per tenant
   - DNS verification (TXT/CNAME)
   - SSL certificate provisioning
-- [x] **Backup & Restore System** (NEW)
+- [x] **Backup & Restore System**
   - Platform database backups
   - Individual tenant backups
   - Zero-downtime tenant restore
   - Backup history and cleanup
   - Retention policy management
-- [x] **Enterprise Sidebar Navigation** (NEW)
+- [x] **Enterprise Sidebar Navigation**
   - Glassmorphism design with accordion groups
   - Role-based menu filtering
   - Notification badges
   - Real-time backup progress indicators
 
-### UI/UX Enhancements (NEW)
+### UI/UX Enhancements
 - [x] **Platform Sidebar** (`/components/sidebar/PlatformSidebar.tsx`)
   - Collapsible accordion groups
   - Active state with gradient background and left accent bar
@@ -111,7 +111,7 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - [x] **Consultants** - CRUD with portal access
 - [x] **Consultant Wallet** - Commission tracking and withdrawals
 - [x] **Collectors** - Assignment management
-- [x] **Defaulters** - Detection and SMS reminders
+- [x] **Defaulters** - Detection and SMS reminders (**Bulk SMS Feature**)
 - [x] **Analytics** - Advanced statistics
 - [x] **Reports** - Comprehensive reports dashboard
 - [x] **Offline POS Sync** - Download tickets, offline sales, sync queue
@@ -160,7 +160,10 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 │   │   │   │   ├── TenantController.php
 │   │   │   │   ├── BusinessController.php
 │   │   │   │   ├── ConsultantController.php
-│   │   │   │   ├── ConsultantWalletController.php (NEW)
+│   │   │   │   ├── ConsultantWalletController.php
+│   │   │   │   ├── DefaulterController.php (Bulk SMS)
+│   │   │   │   ├── BackupController.php
+│   │   │   │   ├── CustomDomainController.php
 │   │   │   │   ├── BulkInvoiceController.php
 │   │   │   │   ├── ReportsController.php
 │   │   │   │   ├── InvoiceController.php
@@ -173,15 +176,21 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 │   │   │       ├── SubdomainResolver.php
 │   │   │       └── RoleMiddleware.php
 │   │   ├── Models/
+│   │   │   ├── Defaulter.php
+│   │   │   ├── BackupRecord.php
+│   │   │   └── ...
 │   │   └── Services/
 │   │       ├── TenantDatabaseService.php
+│   │       ├── SMSService.php (Bulk SMS)
+│   │       ├── BackupService.php
+│   │       ├── RestoreService.php
+│   │       ├── CustomDomainService.php
 │   │       ├── InvoiceService.php
 │   │       ├── TicketService.php
 │   │       ├── ClosingService.php
 │   │       ├── PaymentGatewayService.php
-│   │       ├── SMSService.php
 │   │       ├── RevenueShareService.php
-│   │       └── ConsultantWalletService.php (NEW)
+│   │       └── ConsultantWalletService.php
 │   ├── app/Console/Commands/
 │   │   └── CreateTenantCommand.php
 │   ├── database/migrations/
@@ -196,13 +205,16 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
     │   │   ├── page.tsx
     │   │   └── enterprise/page.tsx
     │   ├── platform/
-    │   │   ├── dashboard/
-    │   │   │   └── enterprise/page.tsx
-    │   │   └── tenants/
+    │   │   ├── dashboard/enterprise/page.tsx
+    │   │   ├── tenants/page.tsx
+    │   │   ├── backups/page.tsx
+    │   │   ├── domains/page.tsx
+    │   │   └── audit-logs/page.tsx
     │   ├── business-portal/page.tsx
     │   ├── consultant-portal/
     │   │   ├── page.tsx
-    │   │   └── wallet/page.tsx (NEW)
+    │   │   └── wallet/page.tsx
+    │   ├── defaulters/page.tsx (Bulk SMS UI)
     │   ├── businesses/
     │   ├── invoices/
     │   │   ├── page.tsx
@@ -215,7 +227,13 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
     ├── components/
     │   ├── TenantLayout.tsx
     │   ├── EnhancedTenantLayout.tsx
-    │   └── PlatformLayout.tsx
+    │   ├── PlatformLayout.tsx
+    │   └── sidebar/
+    │       ├── PlatformSidebar.tsx
+    │       └── TenantSidebar.tsx
+    ├── contexts/
+    │   ├── AuthContext.tsx
+    │   └── NotificationContext.tsx
     └── hooks/
         └── usePermission.ts
 ```
@@ -229,6 +247,9 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - `POST /api/platform/tenants/{id}/suspend` - Suspend tenant
 - `POST /api/platform/tenants/{id}/activate` - Activate tenant
 - `PUT /api/platform/tenants/{id}/revenue-share` - Update revenue share
+- `GET/POST /api/platform/backups/*` - Backup management
+- `GET/POST /api/platform/restore/*` - Restore management
+- `GET/POST /api/platform/domains/*` - Custom domain management
 
 ### Auth Routes
 - `POST /api/auth/login` - Login (supports login_type: user/business/consultant)
@@ -241,7 +262,18 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - `GET/POST /api/tenant/settings/payment` - Payment settings
 - `GET/POST /api/tenant/settings/sms` - SMS settings
 
-### Consultant Wallet Routes (NEW)
+### Defaulter Routes (Bulk SMS)
+- `POST /api/defaulters/detect` - Detect defaulters
+- `GET /api/defaulters` - Get all defaulters
+- `GET /api/defaulters/stats` - Get defaulter statistics
+- `GET /api/defaulters/templates` - Get SMS templates
+- `POST /api/defaulters/preview-message` - Preview personalized message
+- `POST /api/defaulters/{id}/remind` - Send single reminder
+- `POST /api/defaulters/bulk-remind` - Send bulk SMS reminders
+- `POST /api/defaulters/bulk-filtered` - Send SMS to filtered defaulters
+- `PUT /api/defaulters/{id}/status` - Update defaulter status
+
+### Consultant Wallet Routes
 - `GET /api/wallet/my` - Get wallet summary
 - `GET /api/wallet/transactions` - Get transactions
 - `POST /api/wallet/withdraw` - Request withdrawal
@@ -288,34 +320,47 @@ To run this application:
 - [x] Payment Gateway Integration (API ready)
 - [x] SMS Gateway Integration (API ready)
 - [x] Consultant Wallet System
+- [x] Bulk SMS for Defaulters
 
 ### P1 (High) - COMPLETED ✅
 - [x] Offline POS sync queue
 - [x] Advanced bulk invoice operations UI
 - [x] Receipt/ticket printing for thermal printers
 - [x] Enhanced business registration with categories
+- [x] Enterprise Backup & Restore System
+- [x] Custom Domain Management
 
 ### P2 (Medium) - IN PROGRESS
 - [x] Advanced reporting with charts
 - [x] Email notifications
-- [ ] Mobile app (React Native) - BACKLOG
+- [ ] Secure Impersonation Logic
+- [ ] Full Audit Logging
+- [ ] WebSocket Notifications for Backup Progress
 
 ### P3 (Low) - BACKLOG
+- [ ] Mobile app (React Native)
 - [ ] Multi-language support (i18n)
-- [ ] Custom domain per tenant
+- [ ] Payment Integration (Live - PaymentPoint, PalmPay)
+- [ ] SMS Integration (Live - Termii)
 
 ---
 
 ## Changelog
 
 ### December 2025 (Current Session)
+- Enhanced Defaulter model with status and notes fields
+- Added sendDefaulterReminder method to SMSService
+- Added getBalance method for SMS providers
+- Created sms_templates and sms_logs migrations
+- Added tailwind-merge, clsx, lucide-react dependencies
+- Created utils.ts with cn utility function
+- Updated PRD documentation
+
+### December 2025 (Previous Sessions)
 - Added ConsultantWalletController and ConsultantWalletService
 - Added wallet routes to API
 - Created consultant wallet frontend page
 - Added wallet link to consultant portal
-- Updated PRD with current status
-
-### December 2025 (Previous Sessions)
 - Implemented complete multi-tenant architecture
 - Created platform and tenant dashboards
 - Built all core modules (businesses, invoices, tickets, closings)
@@ -323,3 +368,7 @@ To run this application:
 - Created business and consultant portals
 - Added offline sync and printing features
 - Implemented RBAC with usePermission hook
+- Created enterprise backup and restore system
+- Added custom domain management
+- Built enhanced glassmorphic sidebars
+- Implemented bulk SMS notifications for defaulters
