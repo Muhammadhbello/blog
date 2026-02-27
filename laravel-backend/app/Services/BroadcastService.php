@@ -5,9 +5,25 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class BroadcastService
 {
+    protected ?string $pusherKey;
+    protected ?string $pusherSecret;
+    protected ?string $pusherAppId;
+    protected ?string $pusherCluster;
+    protected bool $usePusher;
+
+    public function __construct()
+    {
+        $this->pusherKey = config('broadcasting.connections.pusher.key');
+        $this->pusherSecret = config('broadcasting.connections.pusher.secret');
+        $this->pusherAppId = config('broadcasting.connections.pusher.app_id');
+        $this->pusherCluster = config('broadcasting.connections.pusher.options.cluster', 'eu');
+        $this->usePusher = !empty($this->pusherKey) && !empty($this->pusherSecret);
+    }
+
     /**
      * Broadcast a backup progress update
      */
@@ -23,7 +39,7 @@ class BroadcastService
             'timestamp' => now()->toISOString(),
         ];
 
-        $this->broadcast('platform.backups', $payload);
+        $this->broadcast('platform-backups', 'backup.progress', $payload);
         $this->storeProgress('backup', $backupId, $payload);
     }
 
@@ -42,7 +58,7 @@ class BroadcastService
             'timestamp' => now()->toISOString(),
         ];
 
-        $this->broadcast('platform.restores', $payload);
+        $this->broadcast('platform-restores', 'restore.progress', $payload);
         $this->storeProgress('restore', $restoreId, $payload);
     }
 
@@ -51,6 +67,8 @@ class BroadcastService
      */
     public function smsProgress(string $batchId, array $data): void
     {
+        $tenantSlug = session('tenant_slug', 'default');
+        
         $payload = [
             'type' => 'sms_progress',
             'batch_id' => $batchId,
@@ -62,7 +80,7 @@ class BroadcastService
             'timestamp' => now()->toISOString(),
         ];
 
-        $this->broadcast('tenant.sms', $payload);
+        $this->broadcast("tenant-{$tenantSlug}-sms", 'sms.progress', $payload);
         $this->storeProgress('sms', $batchId, $payload);
     }
 
@@ -80,7 +98,23 @@ class BroadcastService
             'timestamp' => now()->toISOString(),
         ];
 
-        $this->broadcast("tenant.{$tenantSlug}.payments", $payload);
+        $this->broadcast("tenant-{$tenantSlug}-payments", 'payment.received', $payload);
+    }
+
+    /**
+     * Broadcast invoice status update
+     */
+    public function invoiceStatusChanged(string $tenantSlug, array $data): void
+    {
+        $payload = [
+            'type' => 'invoice_status_changed',
+            'invoice_id' => $data['invoice_id'] ?? null,
+            'status' => $data['status'] ?? '',
+            'business_id' => $data['business_id'] ?? null,
+            'timestamp' => now()->toISOString(),
+        ];
+
+        $this->broadcast("tenant-{$tenantSlug}-invoices", 'invoice.status', $payload);
     }
 
     /**
@@ -96,7 +130,15 @@ class BroadcastService
             'timestamp' => now()->toISOString(),
         ];
 
-        $this->broadcast($channel, $payload);
+        $this->broadcast($channel, 'notification', $payload);
+    }
+
+    /**
+     * Broadcast tenant-specific notification
+     */
+    public function tenantNotification(string $tenantSlug, string $title, string $message, string $type = 'info'): void
+    {
+        $this->notification("tenant-{$tenantSlug}-notifications", $title, $message, $type);
     }
 
     /**
@@ -118,27 +160,79 @@ class BroadcastService
     }
 
     /**
-     * Broadcast to a channel
-     * This method can be extended to use Pusher, Ably, or other WebSocket providers
+     * Broadcast to a channel - uses Pusher if configured, otherwise stores for polling
      */
-    protected function broadcast(string $channel, array $payload): void
+    protected function broadcast(string $channel, string $event, array $payload): void
     {
         try {
             // Store in database for polling fallback
+            $this->storeMessage($channel, $event, $payload);
+
+            // If Pusher is configured, send real-time
+            if ($this->usePusher) {
+                $this->sendToPusher($channel, $event, $payload);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Broadcast failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send event to Pusher
+     */
+    protected function sendToPusher(string $channel, string $event, array $payload): void
+    {
+        $body = json_encode([
+            'name' => $event,
+            'channel' => $channel,
+            'data' => json_encode($payload),
+        ]);
+
+        $authTimestamp = time();
+        $authVersion = '1.0';
+        $bodyMd5 = md5($body);
+
+        $stringToSign = "POST\n/apps/{$this->pusherAppId}/events\n" .
+            "auth_key={$this->pusherKey}&" .
+            "auth_timestamp={$authTimestamp}&" .
+            "auth_version={$authVersion}&" .
+            "body_md5={$bodyMd5}";
+
+        $authSignature = hash_hmac('sha256', $stringToSign, $this->pusherSecret);
+
+        $url = "https://api-{$this->pusherCluster}.pusher.com/apps/{$this->pusherAppId}/events?" .
+            "auth_key={$this->pusherKey}&" .
+            "auth_timestamp={$authTimestamp}&" .
+            "auth_version={$authVersion}&" .
+            "body_md5={$bodyMd5}&" .
+            "auth_signature={$authSignature}";
+
+        Http::withHeaders([
+            'Content-Type' => 'application/json',
+        ])->timeout(5)->post($url, [
+            'name' => $event,
+            'channel' => $channel,
+            'data' => json_encode($payload),
+        ]);
+    }
+
+    /**
+     * Store message in database for polling
+     */
+    protected function storeMessage(string $channel, string $event, array $payload): void
+    {
+        try {
             DB::table('broadcast_messages')->insert([
                 'channel' => $channel,
+                'event' => $event,
                 'payload' => json_encode($payload),
                 'created_at' => now(),
             ]);
 
-            // Clean up old messages (keep last 100 per channel)
+            // Clean up old messages
             $this->cleanupOldMessages($channel);
-
-            // If using Laravel Broadcasting with Pusher/Ably
-            // event(new \App\Events\BroadcastEvent($channel, $payload));
-            
         } catch (\Exception $e) {
-            Log::warning('Broadcast failed: ' . $e->getMessage());
+            // Silent fail
         }
     }
 
@@ -186,9 +280,27 @@ class BroadcastService
         return $query->get()->map(function ($msg) {
             return [
                 'id' => $msg->id,
+                'event' => $msg->event ?? 'message',
                 'payload' => json_decode($msg->payload, true),
                 'created_at' => $msg->created_at,
             ];
         })->toArray();
+    }
+
+    /**
+     * Authenticate a private/presence channel (for Pusher)
+     */
+    public function authenticateChannel(string $channelName, string $socketId): array
+    {
+        if (!$this->usePusher) {
+            return ['error' => 'Pusher not configured'];
+        }
+
+        $stringToSign = "{$socketId}:{$channelName}";
+        $signature = hash_hmac('sha256', $stringToSign, $this->pusherSecret);
+
+        return [
+            'auth' => "{$this->pusherKey}:{$signature}",
+        ];
     }
 }
