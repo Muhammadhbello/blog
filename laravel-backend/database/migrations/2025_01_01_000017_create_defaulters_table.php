@@ -16,9 +16,12 @@ return new class extends Migration
             $table->integer('days_overdue')->default(0);
             $table->timestamp('last_reminder_sent')->nullable();
             $table->integer('reminder_count')->default(0);
+            $table->enum('status', ['active', 'payment_plan', 'legal', 'cleared'])->default('active');
+            $table->text('notes')->nullable();
             $table->timestamps();
             
             $table->index(['tenant_id', 'days_overdue']);
+            $table->index(['tenant_id', 'status']);
             $table->index('business_id');
             $table->index('last_reminder_sent');
         });
