@@ -278,16 +278,64 @@ export default function EmailTemplatesPage() {
   };
 
   const sendTestEmail = async () => {
+    if (!testEmailAddress) {
+      toast.error('Please enter a test email address');
+      return;
+    }
+    
+    setSendingTest(true);
     try {
       await apiClient.post('/api/notifications/email/test', {
         template_id: selectedTemplate?.id,
         subject: editedSubject,
         body: editedBody,
+        test_email: testEmailAddress,
       });
-      toast.success('Test email sent to your registered email');
+      toast.success(`Test email sent to ${testEmailAddress}`);
+      setShowTestModal(false);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to send test email');
+    } finally {
+      setSendingTest(false);
     }
+  };
+
+  const insertAtCursor = (text: string) => {
+    if (!textareaRef.current) return;
+    
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const newBody = editedBody.substring(0, start) + text + editedBody.substring(end);
+    
+    handleBodyChange(newBody);
+    
+    // Set cursor position after inserted text
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + text.length, start + text.length);
+    }, 0);
+  };
+
+  const formatHtml = () => {
+    // Basic HTML formatting
+    let formatted = editedBody
+      .replace(/></g, '>\n<')
+      .replace(/>\s+</g, '>\n<');
+    
+    handleBodyChange(formatted);
+    toast.success('HTML formatted');
+  };
+
+  const downloadTemplate = () => {
+    const blob = new Blob([wrapWithStyles(editedBody)], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selectedTemplate?.key || 'template'}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Template downloaded');
   };
 
   const wrapWithStyles = (html: string) => {
