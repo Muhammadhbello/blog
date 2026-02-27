@@ -94,6 +94,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/tenant-comparison', [PlatformAnalyticsController::class, 'getTenantComparison']);
             Route::get('/transaction-volume', [PlatformAnalyticsController::class, 'getTransactionVolume']);
             Route::get('/health', [PlatformAnalyticsController::class, 'getPlatformHealth']);
+            Route::get('/revenue-dashboard', [PlatformAnalyticsController::class, 'getRevenueDashboard']);
+            Route::get('/export/csv', [PlatformAnalyticsController::class, 'exportRevenueCsv']);
+            Route::get('/export/pdf', [PlatformAnalyticsController::class, 'exportRevenuePdf']);
         });
 
         // ==========================================
