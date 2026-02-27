@@ -158,8 +158,13 @@ Route::middleware('auth:sanctum')->group(function () {
         // Defaulters
         Route::post('/defaulters/detect', [DefaulterController::class, 'detectDefaulters']);
         Route::get('/defaulters', [DefaulterController::class, 'getDefaulters']);
+        Route::get('/defaulters/stats', [DefaulterController::class, 'getStats']);
+        Route::get('/defaulters/templates', [DefaulterController::class, 'getTemplates']);
+        Route::post('/defaulters/preview-message', [DefaulterController::class, 'previewMessage']);
         Route::post('/defaulters/{defaulter}/remind', [DefaulterController::class, 'sendReminder']);
         Route::post('/defaulters/bulk-remind', [DefaulterController::class, 'sendBulkReminders']);
+        Route::post('/defaulters/bulk-filtered', [DefaulterController::class, 'sendBulkToFiltered']);
+        Route::put('/defaulters/{id}/status', [DefaulterController::class, 'updateStatus']);
 
         // Consultants
         Route::post('/consultants/assign', [ConsultantController::class, 'assignConsultant']);
