@@ -378,6 +378,34 @@ To run this application:
 ## Changelog
 
 ### December 2025 (Current Session - Enterprise Features)
+**Production Deployment Guide:**
+- Created comprehensive `PRODUCTION_DEPLOYMENT.md` with:
+  - Server requirements and setup
+  - Let's Encrypt SSL wildcard certificate setup
+  - Nginx production configuration with rate limiting
+  - Queue workers with Supervisor
+  - Database optimization for MySQL 8
+  - Redis caching configuration
+  - Health monitoring and backup scripts
+  - Security hardening (UFW, Fail2Ban)
+  - Complete deployment checklist
+
+**Pusher Real-time Integration:**
+- Enhanced `BroadcastService.php` with Pusher support
+- Added Pusher authentication endpoint
+- Created `broadcasting.php` config
+- Built `useRealtime.ts` hook with:
+  - Pusher WebSocket connection
+  - Automatic polling fallback
+  - Channel subscription management
+  - Progress polling helpers
+- Created `ProgressIndicators.tsx` components:
+  - `BackupProgressIndicator` - Real-time backup progress
+  - `SmsProgressIndicator` - SMS batch progress
+  - `CompactProgressBar` - For tables/lists
+  - `RealtimeToast` - Notification toasts
+- Added `pusher-js` dependency
+
 **WebSocket Notifications & Real-time Updates:**
 - Created BroadcastService for real-time notifications (backup, restore, SMS progress)
 - Added polling fallback endpoints in NotificationController
