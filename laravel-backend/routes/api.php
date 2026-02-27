@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\PrintController;
 use App\Http\Controllers\Api\ConsultantWalletController;
 use App\Http\Controllers\Api\BackupController;
 use App\Http\Controllers\Api\CustomDomainController;
+use App\Http\Controllers\Api\PlatformAnalyticsController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/auth/login', [AuthController::class, 'login']);
