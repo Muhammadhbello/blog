@@ -11,10 +11,12 @@ return new class extends Migration
         Schema::create('broadcast_messages', function (Blueprint $table) {
             $table->id();
             $table->string('channel');
+            $table->string('event')->default('message');
             $table->json('payload');
             $table->timestamp('created_at');
 
             $table->index('channel');
+            $table->index('event');
             $table->index('created_at');
             $table->index(['channel', 'created_at']);
         });
