@@ -9,6 +9,7 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - **Platform Database**: `flexcloud_platform` - Central SaaS control, revenue share rules, audit logs
 - **Tenant Databases**: `{slug}_tenant` - Each LGA has physically isolated database
 - **Subdomain Resolution**: `{tenant}.flexcloud.ng` routes to tenant database
+- **Custom Domains**: Support for `revenue.{tenant}.gov.ng` with DNS verification
 
 ### Tech Stack
 - **Backend**: Laravel 11, PHP 8.3
@@ -19,6 +20,7 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 
 ### Enterprise Features
 - [x] **Subdomain-based Tenancy**: `{tenant}.flexcloud.ng` → automatic DB switching
+- [x] **Custom Domain Support**: Tenants can use their own branded domains
 - [x] **Revenue Share System**: Platform-level revenue split (5% default)
   - Percentage model (default 5%)
   - Tiered model (volume-based discounts)
@@ -34,8 +36,9 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
   - Skeleton loaders (shimmer effect)
   - View mode toggle (Comfortable/Compact)
 - [x] **Enhanced Middleware Stack**:
-  - SubdomainResolver → SwitchDB → auth:sanctum → RoleCheck
+  - SubdomainResolver → SwitchDB → auth:sanctum → RoleCheck → TenantMaintenance
 - [x] **Platform Audit Logging**: Impersonation tracking, tenant creation logs
+- [x] **Enterprise Backup & Restore**: Zero-downtime tenant isolation
 
 ## Implemented Features
 
@@ -52,6 +55,16 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - [x] Platform audit logs
 - [x] Platform settings management
 - [x] Revenue share configuration per tenant
+- [x] **Custom Domain Management** (NEW)
+  - Set custom domains per tenant
+  - DNS verification (TXT/CNAME)
+  - SSL certificate provisioning
+- [x] **Backup & Restore System** (NEW)
+  - Platform database backups
+  - Individual tenant backups
+  - Zero-downtime tenant restore
+  - Backup history and cleanup
+  - Retention policy management
 
 ### Tenant Portal
 - [x] Tenant login page with role tabs (Staff/Business/Consultant)
