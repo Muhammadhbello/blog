@@ -117,6 +117,58 @@ class NotificationController extends Controller
     }
 
     /**
+     * Pusher authentication endpoint for private/presence channels
+     */
+    public function pusherAuth(Request $request)
+    {
+        $socketId = $request->input('socket_id');
+        $channelName = $request->input('channel_name');
+
+        if (!$socketId || !$channelName) {
+            return response()->json(['error' => 'Missing parameters'], 400);
+        }
+
+        // Verify user is authenticated
+        if (!auth()->check()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // For private channels, verify access based on channel name
+        if (str_starts_with($channelName, 'private-tenant-')) {
+            // Extract tenant slug from channel
+            preg_match('/private-tenant-([a-z0-9-]+)/', $channelName, $matches);
+            $tenantSlug = $matches[1] ?? '';
+            
+            // Verify user belongs to this tenant or is platform admin
+            $user = auth()->user();
+            if ($user->tenant && $user->tenant->slug !== $tenantSlug && !$user->isPlatformAdmin()) {
+                return response()->json(['error' => 'Access denied to this channel'], 403);
+            }
+        }
+
+        $auth = $this->broadcastService->authenticateChannel($channelName, $socketId);
+
+        if (isset($auth['error'])) {
+            return response()->json($auth, 500);
+        }
+
+        return response()->json($auth);
+    }
+
+    /**
+     * Get Pusher configuration for frontend
+     */
+    public function getPusherConfig()
+    {
+        return response()->json([
+            'key' => config('broadcasting.connections.pusher.key'),
+            'cluster' => config('broadcasting.connections.pusher.options.cluster'),
+            'encrypted' => true,
+            'auth_endpoint' => '/api/realtime/pusher/auth',
+        ]);
+    }
+
+    /**
      * Get email settings
      */
     public function getEmailSettings()
