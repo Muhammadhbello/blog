@@ -66,7 +66,7 @@ const platformMenuGroups: MenuGroup[] = [
     items: [
       { label: 'Revenue Share', icon: Coins, href: '/platform/revenue-share' },
       { label: 'Payouts', icon: Wallet, href: '/platform/payouts' },
-      { label: 'Reconciliation', icon: BarChart3, href: '/platform/reconciliation' },
+      { label: 'Reconciliation', icon: Scale, href: '/platform/reconciliation' },
     ],
   },
   {
