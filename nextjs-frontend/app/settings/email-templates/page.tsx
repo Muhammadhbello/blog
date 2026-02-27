@@ -431,6 +431,21 @@ export default function EmailTemplatesPage() {
                     Snippets
                   </button>
                   <button
+                    onClick={formatHtml}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-100 text-gray-700"
+                    title="Format HTML"
+                  >
+                    <Wand2 className="h-4 w-4" />
+                    Format
+                  </button>
+                  <button
+                    onClick={downloadTemplate}
+                    className="p-2 hover:bg-gray-100 rounded"
+                    title="Download as HTML"
+                  >
+                    <Download className="h-4 w-4" />
+                  </button>
+                  <button
                     onClick={() => setIsFullscreen(!isFullscreen)}
                     className="p-2 hover:bg-gray-100 rounded"
                     title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
@@ -454,11 +469,11 @@ export default function EmailTemplatesPage() {
                     </button>
                   </label>
                   <button
-                    onClick={sendTestEmail}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium text-gray-700"
+                    onClick={() => setShowTestModal(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded text-sm font-medium text-amber-700"
                   >
-                    <Send className="h-4 w-4" />
-                    Test
+                    <TestTube className="h-4 w-4" />
+                    Send Test
                   </button>
                   <button
                     onClick={saveTemplate}
