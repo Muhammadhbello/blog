@@ -49,6 +49,7 @@ const platformMenuGroups: MenuGroup[] = [
     items: [
       { label: 'Overview', icon: LayoutDashboard, href: '/platform/dashboard/enterprise' },
       { label: 'Analytics', icon: BarChart3, href: '/platform/analytics' },
+      { label: 'Revenue Dashboard', icon: BarChart3, href: '/platform/revenue-dashboard' },
     ],
   },
   {
