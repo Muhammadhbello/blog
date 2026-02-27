@@ -290,4 +290,177 @@ class SMSService
 
         return $results;
     }
+
+    /**
+     * Send bulk SMS to multiple recipients
+     */
+    public function sendBulk(array $recipients, string $message): array
+    {
+        $results = [
+            'success' => true,
+            'total' => count($recipients),
+            'sent' => 0,
+            'failed' => 0,
+            'errors' => [],
+        ];
+
+        foreach ($recipients as $recipient) {
+            $phone = $recipient['phone'] ?? $recipient;
+            $personalizedMessage = $this->personalizeMessage($message, $recipient);
+            
+            $result = $this->send($phone, $personalizedMessage);
+            
+            if ($result['success']) {
+                $results['sent']++;
+            } else {
+                $results['failed']++;
+                $results['errors'][] = [
+                    'phone' => $phone,
+                    'error' => $result['message'] ?? 'Unknown error',
+                ];
+            }
+        }
+
+        $results['success'] = $results['failed'] === 0;
+        return $results;
+    }
+
+    /**
+     * Personalize message with recipient placeholders
+     */
+    protected function personalizeMessage(string $message, $recipient): string
+    {
+        if (!is_array($recipient)) {
+            return $message;
+        }
+
+        $placeholders = [
+            '{name}' => $recipient['name'] ?? $recipient['business_name'] ?? $recipient['owner_name'] ?? 'Customer',
+            '{business_name}' => $recipient['business_name'] ?? '',
+            '{owner_name}' => $recipient['owner_name'] ?? '',
+            '{amount}' => isset($recipient['amount']) ? number_format($recipient['amount'], 0) : '',
+            '{outstanding}' => isset($recipient['outstanding']) ? number_format($recipient['outstanding'], 0) : '',
+            '{due_date}' => $recipient['due_date'] ?? '',
+            '{invoice_number}' => $recipient['invoice_number'] ?? '',
+            '{tenant_name}' => $recipient['tenant_name'] ?? '',
+        ];
+
+        return str_replace(array_keys($placeholders), array_values($placeholders), $message);
+    }
+
+    /**
+     * Send bulk defaulter reminders with personalized messages
+     */
+    public function sendBulkDefaulterReminders(array $defaulterIds, ?string $customMessage = null): array
+    {
+        $defaulters = DB::connection('tenant')
+            ->table('defaulters')
+            ->join('invoices', 'defaulters.invoice_id', '=', 'invoices.id')
+            ->join('businesses', 'invoices.business_id', '=', 'businesses.id')
+            ->whereIn('defaulters.id', $defaulterIds)
+            ->select(
+                'defaulters.id',
+                'defaulters.invoice_id',
+                'businesses.name as business_name',
+                'businesses.owner_name',
+                'businesses.phone',
+                'businesses.owner_phone',
+                'invoices.invoice_number',
+                'invoices.total_amount',
+                'invoices.amount_paid',
+                'invoices.due_date'
+            )
+            ->get();
+
+        if ($defaulters->isEmpty()) {
+            return [
+                'success' => false,
+                'message' => 'No defaulters found',
+                'total' => 0,
+                'sent' => 0,
+                'failed' => 0,
+            ];
+        }
+
+        // Get template or use custom message
+        $template = $customMessage ?? $this->getTemplate('defaulter_reminder');
+        if (!$template) {
+            $template = "Dear {name}, you have an outstanding balance of NGN{outstanding} for invoice #{invoice_number}. Please make payment to avoid penalties. - {tenant_name}";
+        }
+
+        $results = [
+            'success' => true,
+            'total' => $defaulters->count(),
+            'sent' => 0,
+            'failed' => 0,
+            'errors' => [],
+        ];
+
+        foreach ($defaulters as $defaulter) {
+            $phone = $defaulter->owner_phone ?? $defaulter->phone;
+            if (!$phone) {
+                $results['failed']++;
+                $results['errors'][] = [
+                    'defaulter_id' => $defaulter->id,
+                    'error' => 'No phone number available',
+                ];
+                continue;
+            }
+
+            $outstanding = $defaulter->total_amount - $defaulter->amount_paid;
+            $message = $this->personalizeMessage($template, [
+                'name' => $defaulter->owner_name ?? $defaulter->business_name,
+                'business_name' => $defaulter->business_name,
+                'owner_name' => $defaulter->owner_name,
+                'outstanding' => $outstanding,
+                'amount' => $defaulter->total_amount,
+                'invoice_number' => $defaulter->invoice_number,
+                'due_date' => $defaulter->due_date,
+                'tenant_name' => config('app.name', 'FlexCloud'),
+            ]);
+
+            $result = $this->send($phone, $message, 'defaulter_reminder', 'defaulter', $defaulter->id);
+
+            if ($result['success']) {
+                $results['sent']++;
+                
+                // Update reminder count
+                DB::connection('tenant')->table('defaulters')
+                    ->where('id', $defaulter->id)
+                    ->increment('reminder_count');
+                    
+                DB::connection('tenant')->table('defaulters')
+                    ->where('id', $defaulter->id)
+                    ->update(['last_reminder_at' => now()]);
+            } else {
+                $results['failed']++;
+                $results['errors'][] = [
+                    'defaulter_id' => $defaulter->id,
+                    'phone' => $phone,
+                    'error' => $result['message'] ?? 'Unknown error',
+                ];
+            }
+        }
+
+        $results['success'] = $results['failed'] < $results['total'];
+        return $results;
+    }
+
+    /**
+     * Get SMS template by slug
+     */
+    public function getTemplate(string $slug): ?string
+    {
+        try {
+            $template = DB::connection('tenant')
+                ->table('sms_templates')
+                ->where('slug', $slug)
+                ->where('is_active', true)
+                ->first();
+
+            return $template?->content;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 }
