@@ -6,41 +6,106 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
-use App\Services\ClosingService;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use App\Models\PaymentSetting;
+use App\Models\SmsSetting;
+use App\Models\MessageTemplate;
 
 class TenantSettingController extends Controller
 {
     /**
-     * Get payment gateway settings
+     * Get all payment gateway settings (supports multiple providers)
      */
     public function getPaymentSettings()
     {
         $settings = DB::connection('tenant')
             ->table('payment_settings')
-            ->first();
+            ->get();
 
-        if (!$settings) {
+        if ($settings->isEmpty()) {
+            // Return default structure for both providers
             return response()->json([
-                'provider' => 'paymentpoint',
-                'is_active' => false,
-                'api_key' => '',
-                'secret_key' => '',
-                'merchant_id' => '',
-                'webhook_secret' => '',
-                'environment' => 'sandbox',
+                'providers' => [
+                    'paymentpoint' => $this->getDefaultPaymentConfig('paymentpoint'),
+                    'palmpay' => $this->getDefaultPaymentConfig('palmpay'),
+                ],
+                'active_provider' => null,
             ]);
         }
 
+        $providers = [];
+        $activeProvider = null;
+
+        foreach ($settings as $setting) {
+            $providers[$setting->provider] = [
+                'id' => $setting->id,
+                'provider' => $setting->provider,
+                'mode' => $setting->mode ?? 'test',
+                'merchant_id' => $setting->merchant_id ?? '',
+                'public_key' => $setting->public_key ?? '',
+                'secret_key_masked' => $setting->secret_key ? $this->maskSecret($setting->secret_key) : null,
+                'base_url' => $setting->base_url ?? '',
+                'webhook_secret_masked' => $setting->webhook_secret ? $this->maskSecret($setting->webhook_secret) : null,
+                'is_enabled' => (bool) $setting->is_enabled,
+                'last_tested_at' => $setting->last_tested_at,
+                'last_test_status' => $setting->last_test_status,
+                'last_test_message' => $setting->last_test_message,
+                'has_secret_key' => !empty($setting->secret_key),
+                'has_webhook_secret' => !empty($setting->webhook_secret),
+            ];
+            
+            if ($setting->is_enabled) {
+                $activeProvider = $setting->provider;
+            }
+        }
+
+        // Fill in missing providers with defaults
+        foreach (['paymentpoint', 'palmpay'] as $provider) {
+            if (!isset($providers[$provider])) {
+                $providers[$provider] = $this->getDefaultPaymentConfig($provider);
+            }
+        }
+
         return response()->json([
-            'id' => $settings->id,
-            'provider' => $settings->provider,
-            'is_active' => (bool) $settings->is_active,
-            'api_key' => $settings->api_key ? '••••••••' : '',
-            'secret_key' => $settings->secret_key ? '••••••••' : '',
-            'merchant_id' => $settings->merchant_id ?? '',
-            'webhook_secret' => $settings->webhook_secret ? '••••••••' : '',
-            'environment' => $settings->environment ?? 'sandbox',
+            'providers' => $providers,
+            'active_provider' => $activeProvider,
         ]);
+    }
+
+    protected function getDefaultPaymentConfig(string $provider): array
+    {
+        return [
+            'id' => null,
+            'provider' => $provider,
+            'mode' => 'test',
+            'merchant_id' => '',
+            'public_key' => '',
+            'secret_key_masked' => null,
+            'base_url' => '',
+            'webhook_secret_masked' => null,
+            'is_enabled' => false,
+            'last_tested_at' => null,
+            'last_test_status' => null,
+            'last_test_message' => null,
+            'has_secret_key' => false,
+            'has_webhook_secret' => false,
+        ];
+    }
+
+    protected function maskSecret(?string $encrypted): ?string
+    {
+        if (!$encrypted) return null;
+        
+        try {
+            $decrypted = Crypt::decryptString($encrypted);
+            if (strlen($decrypted) <= 8) {
+                return str_repeat('*', strlen($decrypted));
+            }
+            return substr($decrypted, 0, 4) . str_repeat('*', strlen($decrypted) - 8) . substr($decrypted, -4);
+        } catch (\Exception $e) {
+            return '****encrypted****';
+        }
     }
 
     /**
