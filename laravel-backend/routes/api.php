@@ -227,6 +227,14 @@ Route::middleware('auth:sanctum')->group(function () {
         // General Settings
         Route::get('/settings/general', [TenantSettingController::class, 'getGeneralSettings']);
         Route::post('/settings/general', [TenantSettingController::class, 'updateGeneralSettings']);
+
+        // Tenant Audit Logs
+        Route::get('/audit-logs', [TenantAuditLogController::class, 'index']);
+        Route::get('/audit-logs/stats', [TenantAuditLogController::class, 'stats']);
+        Route::get('/audit-logs/modules', [TenantAuditLogController::class, 'modules']);
+        Route::get('/audit-logs/actions', [TenantAuditLogController::class, 'actions']);
+        Route::get('/audit-logs/entity/{entityType}/{entityId}', [TenantAuditLogController::class, 'entityHistory']);
+        Route::get('/audit-logs/export', [TenantAuditLogController::class, 'export']);
     });
 
     // ==========================================
