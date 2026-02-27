@@ -81,6 +81,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Impersonate Tenant (Enter Tenant Portal)
         Route::post('/tenants/{tenant}/impersonate', [TenantController::class, 'impersonate']);
+        Route::post('/impersonate/exit', [TenantController::class, 'exitImpersonation']);
+
+        // ==========================================
+        // PLATFORM ANALYTICS
+        // ==========================================
+        Route::prefix('analytics')->group(function () {
+            Route::get('/dashboard', [PlatformAnalyticsController::class, 'getDashboardStats']);
+            Route::get('/revenue-trends', [PlatformAnalyticsController::class, 'getRevenueTrends']);
+            Route::get('/tenant-comparison', [PlatformAnalyticsController::class, 'getTenantComparison']);
+            Route::get('/transaction-volume', [PlatformAnalyticsController::class, 'getTransactionVolume']);
+            Route::get('/health', [PlatformAnalyticsController::class, 'getPlatformHealth']);
+        });
 
         // ==========================================
         // BACKUP & RESTORE MANAGEMENT
