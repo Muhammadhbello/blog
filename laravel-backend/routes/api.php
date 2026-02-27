@@ -252,4 +252,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/closing/{closingId}/receipt', [PrintController::class, 'getClosingReceiptData']);
         Route::post('/settings', [PrintController::class, 'updatePrintSettings']);
     });
+
+    // ==========================================
+    // CONSULTANT WALLET ROUTES
+    // ==========================================
+    Route::middleware(['role:consultant,consultant_admin'])->prefix('wallet')->group(function () {
+        Route::get('/my', [ConsultantWalletController::class, 'getMyWallet']);
+        Route::get('/transactions', [ConsultantWalletController::class, 'getTransactions']);
+        Route::post('/withdraw', [ConsultantWalletController::class, 'requestWithdrawal']);
+    });
+
+    // Admin wallet management
+    Route::middleware(['role:chairman,treasurer'])->prefix('wallet-admin')->group(function () {
+        Route::get('/stats', [ConsultantWalletController::class, 'getWalletStats']);
+        Route::get('/withdrawals', [ConsultantWalletController::class, 'getWithdrawalRequests']);
+        Route::post('/withdrawals/{id}/approve', [ConsultantWalletController::class, 'approveWithdrawal']);
+        Route::post('/withdrawals/{id}/reject', [ConsultantWalletController::class, 'rejectWithdrawal']);
+        Route::get('/commission-rules', [ConsultantWalletController::class, 'getCommissionRules']);
+        Route::post('/commission-rules', [ConsultantWalletController::class, 'saveCommissionRule']);
+        Route::delete('/commission-rules/{id}', [ConsultantWalletController::class, 'deleteCommissionRule']);
+    });
 });
