@@ -552,6 +552,6 @@ export default function EnterpriseDashboard() {
           )}
         </div>
       )}
-    </TenantLayout>
+    </EnhancedTenantLayout>
   );
 }
