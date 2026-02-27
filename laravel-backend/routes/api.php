@@ -180,7 +180,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ==========================================
     // TENANT USER MANAGEMENT (Chairman Only)
     // ==========================================
-    Route::middleware(['role:chairman'])->prefix('tenant')->group(function () {
+    Route::middleware(['role:chairman,lga_admin'])->prefix('tenant')->group(function () {
         // User Management
         Route::apiResource('users', TenantUserController::class);
         Route::get('/users-stats', [TenantUserController::class, 'stats']);
@@ -196,13 +196,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/collectors', [CollectorAssignmentController::class, 'getCollectors']);
         Route::get('/collector-assignments-stats', [CollectorAssignmentController::class, 'stats']);
 
-        // Tenant Settings (Payment, SMS, Templates)
+        // Tenant Settings - Payment Gateway
         Route::get('/settings/payment', [TenantSettingController::class, 'getPaymentSettings']);
         Route::post('/settings/payment', [TenantSettingController::class, 'savePaymentSettings']);
+        Route::post('/settings/payment/test', [TenantSettingController::class, 'testPaymentConnection']);
+        
+        // Tenant Settings - SMS Gateway
         Route::get('/settings/sms', [TenantSettingController::class, 'getSmsSettings']);
         Route::post('/settings/sms', [TenantSettingController::class, 'saveSmsSettings']);
+        Route::post('/settings/sms/test', [TenantSettingController::class, 'testSmsConnection']);
+        
+        // Message Templates
         Route::get('/templates', [TenantSettingController::class, 'getTemplates']);
         Route::put('/templates/{id}', [TenantSettingController::class, 'updateTemplate']);
+        Route::post('/templates/preview', [TenantSettingController::class, 'previewTemplate']);
+        
+        // General Settings
         Route::get('/settings/general', [TenantSettingController::class, 'getGeneralSettings']);
         Route::post('/settings/general', [TenantSettingController::class, 'updateGeneralSettings']);
     });
