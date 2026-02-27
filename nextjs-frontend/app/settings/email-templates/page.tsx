@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { EnhancedTenantLayout } from '@/components/layout/EnhancedTenantLayout';
 import { 
   Mail, 
@@ -31,7 +31,14 @@ import {
   FileText,
   Lightbulb,
   Maximize2,
-  Minimize2
+  Minimize2,
+  TestTube,
+  History,
+  Download,
+  Upload,
+  Wand2,
+  Layout,
+  Zap
 } from 'lucide-react';
 import apiClient from '@/lib/api';
 import { toast } from 'sonner';
