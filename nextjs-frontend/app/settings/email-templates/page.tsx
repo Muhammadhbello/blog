@@ -144,6 +144,11 @@ export default function EmailTemplatesPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testEmailAddress, setTestEmailAddress] = useState('');
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [editorTab, setEditorTab] = useState<'visual' | 'html'>('html');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     fetchTemplates();
