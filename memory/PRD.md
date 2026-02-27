@@ -65,6 +65,30 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
   - Zero-downtime tenant restore
   - Backup history and cleanup
   - Retention policy management
+- [x] **Enterprise Sidebar Navigation** (NEW)
+  - Glassmorphism design with accordion groups
+  - Role-based menu filtering
+  - Notification badges
+  - Real-time backup progress indicators
+
+### UI/UX Enhancements (NEW)
+- [x] **Platform Sidebar** (`/components/sidebar/PlatformSidebar.tsx`)
+  - Collapsible accordion groups
+  - Active state with gradient background and left accent bar
+  - Notification badges (support tickets, onboarding)
+  - User profile footer with logout
+  - Mobile responsive with overlay
+- [x] **Tenant Sidebar** (`/components/sidebar/TenantSidebar.tsx`)
+  - Role-based menu visibility
+  - Consultant-specific simplified view
+  - Quick action button for ticket selling
+  - Pending closings/defaulters badges
+  - Impersonation banner integration
+- [x] **Notification System** (`/contexts/NotificationContext.tsx`)
+  - Real-time backup progress polling
+  - Toast notifications
+  - Notification bell with dropdown
+  - Read/unread state management
 
 ### Tenant Portal
 - [x] Tenant login page with role tabs (Staff/Business/Consultant)
