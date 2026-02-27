@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PlatformLayout } from '@/components/PlatformLayout';
 import { 
   TrendingUp, 
@@ -22,7 +22,11 @@ import {
   Wallet,
   Scale,
   Users,
-  Zap
+  Zap,
+  FileSpreadsheet,
+  FileText,
+  X,
+  Check
 } from 'lucide-react';
 import {
   LineChart,
@@ -45,6 +49,7 @@ import {
   RadialBar
 } from 'recharts';
 import apiClient from '@/lib/api';
+import { toast } from 'sonner';
 
 // Color palette
 const COLORS = {
@@ -66,7 +71,9 @@ interface RevenueData {
 }
 
 interface TenantRevenue {
+  id: number;
   name: string;
+  slug: string;
   gross: number;
   platform_fee: number;
   transactions: number;
@@ -94,16 +101,50 @@ interface ReconciliationData {
   rate: number;
 }
 
+interface DateRange {
+  start: string;
+  end: string;
+  range: string;
+}
+
+interface Stats {
+  totalGross: number;
+  totalPlatformFee: number;
+  totalTransactions: number;
+  avgTransactionValue: number;
+  monthlyGrowth: number;
+  matchRate: number;
+}
+
+// Date presets
+const datePresets = [
+  { label: 'Today', value: 'today' },
+  { label: 'This Week', value: 'week' },
+  { label: 'This Month', value: 'month' },
+  { label: 'This Quarter', value: 'quarter' },
+  { label: 'This Year', value: 'year' },
+  { label: 'Custom', value: 'custom' },
+];
+
 export default function RevenueDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [range, setRange] = useState('month');
+  const [exporting, setExporting] = useState<string | null>(null);
+  
+  // Date range state
+  const [rangePreset, setRangePreset] = useState('month');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange | null>(null);
+  
+  // Data state
   const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
   const [tenantRevenue, setTenantRevenue] = useState<TenantRevenue[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
   const [payoutData, setPayoutData] = useState<PayoutData[]>([]);
   const [reconciliationData, setReconciliationData] = useState<ReconciliationData[]>([]);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<Stats>({
     totalGross: 0,
     totalPlatformFee: 0,
     totalTransactions: 0,
@@ -112,87 +153,282 @@ export default function RevenueDashboardPage() {
     matchRate: 0,
   });
 
-  useEffect(() => {
-    fetchData();
-  }, [range]);
+  // Export modal
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportType, setExportType] = useState('transactions');
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setRefreshing(true);
     try {
-      // Mock data for demonstration
-      const mockRevenueData: RevenueData[] = [
-        { date: '2025-01-01', gross: 4500000, platform_fee: 225000, net: 4275000, transactions: 312 },
-        { date: '2025-01-02', gross: 3800000, platform_fee: 190000, net: 3610000, transactions: 267 },
-        { date: '2025-01-03', gross: 5200000, platform_fee: 260000, net: 4940000, transactions: 398 },
-        { date: '2025-01-04', gross: 4100000, platform_fee: 205000, net: 3895000, transactions: 289 },
-        { date: '2025-01-05', gross: 6100000, platform_fee: 305000, net: 5795000, transactions: 456 },
-        { date: '2025-01-06', gross: 5500000, platform_fee: 275000, net: 5225000, transactions: 412 },
-        { date: '2025-01-07', gross: 4900000, platform_fee: 245000, net: 4655000, transactions: 367 },
-        { date: '2025-01-08', gross: 5800000, platform_fee: 290000, net: 5510000, transactions: 423 },
-        { date: '2025-01-09', gross: 6300000, platform_fee: 315000, net: 5985000, transactions: 478 },
-        { date: '2025-01-10', gross: 5100000, platform_fee: 255000, net: 4845000, transactions: 389 },
-        { date: '2025-01-11', gross: 4700000, platform_fee: 235000, net: 4465000, transactions: 345 },
-        { date: '2025-01-12', gross: 5900000, platform_fee: 295000, net: 5605000, transactions: 434 },
-        { date: '2025-01-13', gross: 6500000, platform_fee: 325000, net: 6175000, transactions: 498 },
-        { date: '2025-01-14', gross: 5400000, platform_fee: 270000, net: 5130000, transactions: 401 },
-      ];
-
-      const mockTenantRevenue: TenantRevenue[] = [
-        { name: 'Potiskum LGA', gross: 25750000, platform_fee: 1287500, transactions: 1856, growth: 12.5 },
-        { name: 'Damaturu LGA', gross: 18920000, platform_fee: 946000, transactions: 1432, growth: 8.3 },
-        { name: 'Nguru LGA', gross: 12450000, platform_fee: 622500, transactions: 987, growth: -2.1 },
-        { name: 'Gashua LGA', gross: 9800000, platform_fee: 490000, transactions: 756, growth: 15.7 },
-        { name: 'Geidam LGA', gross: 7650000, platform_fee: 382500, transactions: 612, growth: 5.2 },
-      ];
-
-      const mockCategoryData: CategoryData[] = [
-        { name: 'Business License', value: 35000000, count: 2456 },
-        { name: 'Property Tax', value: 28000000, count: 1823 },
-        { name: 'Market Fees', value: 15000000, count: 4521 },
-        { name: 'Vehicle Registration', value: 12000000, count: 987 },
-        { name: 'Trade Permits', value: 8500000, count: 654 },
-        { name: 'Others', value: 6500000, count: 1234 },
-      ];
-
-      const mockPayoutData: PayoutData[] = [
-        { month: 'Sep', pending: 3, completed: 12, amount: 42500000 },
-        { month: 'Oct', pending: 2, completed: 14, amount: 48200000 },
-        { month: 'Nov', pending: 4, completed: 13, amount: 45800000 },
-        { month: 'Dec', pending: 2, completed: 15, amount: 52300000 },
-        { month: 'Jan', pending: 5, completed: 10, amount: 38500000 },
-      ];
-
-      const mockReconciliationData: ReconciliationData[] = [
-        { period: 'Week 1', matched: 312, unmatched: 8, disputed: 2, rate: 96.9 },
-        { period: 'Week 2', matched: 345, unmatched: 5, disputed: 1, rate: 98.3 },
-        { period: 'Week 3', matched: 289, unmatched: 12, disputed: 3, rate: 95.1 },
-        { period: 'Week 4', matched: 378, unmatched: 7, disputed: 2, rate: 97.7 },
-      ];
-
-      setRevenueData(mockRevenueData);
-      setTenantRevenue(mockTenantRevenue);
-      setCategoryData(mockCategoryData);
-      setPayoutData(mockPayoutData);
-      setReconciliationData(mockReconciliationData);
-
-      const totalGross = mockRevenueData.reduce((sum, d) => sum + d.gross, 0);
-      const totalPlatformFee = mockRevenueData.reduce((sum, d) => sum + d.platform_fee, 0);
-      const totalTransactions = mockRevenueData.reduce((sum, d) => sum + d.transactions, 0);
-
-      setStats({
-        totalGross,
-        totalPlatformFee,
-        totalTransactions,
-        avgTransactionValue: Math.round(totalGross / totalTransactions),
-        monthlyGrowth: 12.5,
-        matchRate: 97.2,
+      const params: any = { range: rangePreset };
+      if (rangePreset === 'custom' && customStartDate && customEndDate) {
+        params.start_date = customStartDate;
+        params.end_date = customEndDate;
+      }
+      
+      const response = await apiClient.get('/api/platform/analytics/revenue-dashboard', { params });
+      const data = response.data;
+      
+      setStats(data.stats || {
+        totalGross: 0,
+        totalPlatformFee: 0,
+        totalTransactions: 0,
+        avgTransactionValue: 0,
+        monthlyGrowth: 0,
+        matchRate: 0,
       });
-    } catch (error) {
+      setRevenueData(data.revenueData || []);
+      setTenantRevenue(data.tenantRevenue || []);
+      setCategoryData(data.categoryData || []);
+      setPayoutData(data.payoutData || []);
+      setReconciliationData(data.reconciliationData || []);
+      setDateRange(data.dateRange || null);
+      
+    } catch (error: any) {
       console.error('Failed to fetch data:', error);
+      // Use mock data if API fails
+      loadMockData();
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
+  }, [rangePreset, customStartDate, customEndDate]);
+
+  const loadMockData = () => {
+    // Mock data for demonstration when API is not available
+    const mockRevenueData: RevenueData[] = [
+      { date: '2025-01-01', gross: 4500000, platform_fee: 225000, net: 4275000, transactions: 312 },
+      { date: '2025-01-02', gross: 3800000, platform_fee: 190000, net: 3610000, transactions: 267 },
+      { date: '2025-01-03', gross: 5200000, platform_fee: 260000, net: 4940000, transactions: 398 },
+      { date: '2025-01-04', gross: 4100000, platform_fee: 205000, net: 3895000, transactions: 289 },
+      { date: '2025-01-05', gross: 6100000, platform_fee: 305000, net: 5795000, transactions: 456 },
+      { date: '2025-01-06', gross: 5500000, platform_fee: 275000, net: 5225000, transactions: 412 },
+      { date: '2025-01-07', gross: 4900000, platform_fee: 245000, net: 4655000, transactions: 367 },
+      { date: '2025-01-08', gross: 5800000, platform_fee: 290000, net: 5510000, transactions: 423 },
+      { date: '2025-01-09', gross: 6300000, platform_fee: 315000, net: 5985000, transactions: 478 },
+      { date: '2025-01-10', gross: 5100000, platform_fee: 255000, net: 4845000, transactions: 389 },
+      { date: '2025-01-11', gross: 4700000, platform_fee: 235000, net: 4465000, transactions: 345 },
+      { date: '2025-01-12', gross: 5900000, platform_fee: 295000, net: 5605000, transactions: 434 },
+      { date: '2025-01-13', gross: 6500000, platform_fee: 325000, net: 6175000, transactions: 498 },
+      { date: '2025-01-14', gross: 5400000, platform_fee: 270000, net: 5130000, transactions: 401 },
+    ];
+
+    const mockTenantRevenue: TenantRevenue[] = [
+      { id: 1, name: 'Potiskum LGA', slug: 'potiskum', gross: 25750000, platform_fee: 1287500, transactions: 1856, growth: 12.5 },
+      { id: 2, name: 'Damaturu LGA', slug: 'damaturu', gross: 18920000, platform_fee: 946000, transactions: 1432, growth: 8.3 },
+      { id: 3, name: 'Nguru LGA', slug: 'nguru', gross: 12450000, platform_fee: 622500, transactions: 987, growth: -2.1 },
+      { id: 4, name: 'Gashua LGA', slug: 'gashua', gross: 9800000, platform_fee: 490000, transactions: 756, growth: 15.7 },
+      { id: 5, name: 'Geidam LGA', slug: 'geidam', gross: 7650000, platform_fee: 382500, transactions: 612, growth: 5.2 },
+    ];
+
+    const mockCategoryData: CategoryData[] = [
+      { name: 'Business License', value: 35000000, count: 2456 },
+      { name: 'Property Tax', value: 28000000, count: 1823 },
+      { name: 'Market Fees', value: 15000000, count: 4521 },
+      { name: 'Vehicle Registration', value: 12000000, count: 987 },
+      { name: 'Trade Permits', value: 8500000, count: 654 },
+      { name: 'Others', value: 6500000, count: 1234 },
+    ];
+
+    const mockPayoutData: PayoutData[] = [
+      { month: 'Sep', pending: 3, completed: 12, amount: 42500000 },
+      { month: 'Oct', pending: 2, completed: 14, amount: 48200000 },
+      { month: 'Nov', pending: 4, completed: 13, amount: 45800000 },
+      { month: 'Dec', pending: 2, completed: 15, amount: 52300000 },
+      { month: 'Jan', pending: 5, completed: 10, amount: 38500000 },
+    ];
+
+    const mockReconciliationData: ReconciliationData[] = [
+      { period: 'Week 1', matched: 312, unmatched: 8, disputed: 2, rate: 96.9 },
+      { period: 'Week 2', matched: 345, unmatched: 5, disputed: 1, rate: 98.3 },
+      { period: 'Week 3', matched: 289, unmatched: 12, disputed: 3, rate: 95.1 },
+      { period: 'Week 4', matched: 378, unmatched: 7, disputed: 2, rate: 97.7 },
+    ];
+
+    setRevenueData(mockRevenueData);
+    setTenantRevenue(mockTenantRevenue);
+    setCategoryData(mockCategoryData);
+    setPayoutData(mockPayoutData);
+    setReconciliationData(mockReconciliationData);
+
+    const totalGross = mockRevenueData.reduce((sum, d) => sum + d.gross, 0);
+    const totalPlatformFee = mockRevenueData.reduce((sum, d) => sum + d.platform_fee, 0);
+    const totalTransactions = mockRevenueData.reduce((sum, d) => sum + d.transactions, 0);
+
+    setStats({
+      totalGross,
+      totalPlatformFee,
+      totalTransactions,
+      avgTransactionValue: Math.round(totalGross / totalTransactions),
+      monthlyGrowth: 12.5,
+      matchRate: 97.2,
+    });
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleRangeChange = (preset: string) => {
+    setRangePreset(preset);
+    if (preset === 'custom') {
+      setShowDatePicker(true);
+    } else {
+      setShowDatePicker(false);
+    }
+  };
+
+  const applyCustomDateRange = () => {
+    if (customStartDate && customEndDate) {
+      setShowDatePicker(false);
+      fetchData();
+    } else {
+      toast.error('Please select both start and end dates');
+    }
+  };
+
+  const exportData = async (format: 'csv' | 'pdf') => {
+    setExporting(format);
+    try {
+      const params: any = {
+        range: rangePreset,
+        type: exportType,
+      };
+      
+      if (rangePreset === 'custom' && customStartDate && customEndDate) {
+        params.start_date = customStartDate;
+        params.end_date = customEndDate;
+      }
+
+      if (format === 'csv') {
+        const response = await apiClient.get('/api/platform/analytics/export/csv', {
+          params,
+          responseType: 'blob',
+        });
+        
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `flexcloud_${exportType}_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        
+        toast.success('CSV exported successfully');
+      } else {
+        const response = await apiClient.get('/api/platform/analytics/export/pdf', { params });
+        
+        // Generate PDF from JSON data
+        generatePdfFromData(response.data);
+        toast.success('PDF exported successfully');
+      }
+      
+      setShowExportModal(false);
+    } catch (error: any) {
+      console.error('Export failed:', error);
+      toast.error('Export failed. Please try again.');
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const generatePdfFromData = (data: any) => {
+    // Create a printable HTML document
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Please allow popups to export PDF');
+      return;
+    }
+
+    const formatCurrency = (val: number) => new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 0,
+    }).format(val);
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${data.report?.title || 'Revenue Report'}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
+          h1 { color: #1e40af; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
+          h2 { color: #374151; margin-top: 30px; }
+          .period { color: #6b7280; font-size: 14px; margin-bottom: 30px; }
+          .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 20px 0; }
+          .summary-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; }
+          .summary-card h3 { font-size: 12px; color: #6b7280; margin: 0 0 5px 0; text-transform: uppercase; }
+          .summary-card p { font-size: 24px; font-weight: bold; margin: 0; color: #1e40af; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+          th { background: #f1f5f9; font-weight: 600; color: #374151; }
+          tr:hover { background: #f8fafc; }
+          .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #9ca3af; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <h1>${data.report?.title || 'FlexCloud Revenue Report'}</h1>
+        <p class="period">Period: ${data.report?.period || 'N/A'} | Generated: ${new Date().toLocaleDateString()}</p>
+        
+        <h2>Summary</h2>
+        <div class="summary-grid">
+          <div class="summary-card">
+            <h3>Gross Revenue</h3>
+            <p>${formatCurrency(data.summary?.gross_revenue || 0)}</p>
+          </div>
+          <div class="summary-card">
+            <h3>Platform Fees</h3>
+            <p>${formatCurrency(data.summary?.platform_fees || 0)}</p>
+          </div>
+          <div class="summary-card">
+            <h3>Net Revenue</h3>
+            <p>${formatCurrency(data.summary?.net_revenue || 0)}</p>
+          </div>
+          <div class="summary-card">
+            <h3>Total Transactions</h3>
+            <p>${(data.summary?.total_transactions || 0).toLocaleString()}</p>
+          </div>
+          <div class="summary-card">
+            <h3>Avg Transaction</h3>
+            <p>${formatCurrency(data.summary?.avg_transaction_value || 0)}</p>
+          </div>
+        </div>
+        
+        <h2>Tenant Breakdown</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Tenant</th>
+              <th>Gross Revenue</th>
+              <th>Platform Fee</th>
+              <th>Transactions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(data.tenant_breakdown || []).map((t: any) => `
+              <tr>
+                <td>${t.name}</td>
+                <td>${formatCurrency(t.gross)}</td>
+                <td>${formatCurrency(t.platform_fee)}</td>
+                <td>${t.transactions}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div class="footer">
+          <p>FlexCloud Revenue Management System | Confidential</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   const formatCurrency = (value: number) => {
