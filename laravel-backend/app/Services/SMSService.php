@@ -463,4 +463,144 @@ class SMSService
             return null;
         }
     }
+
+    /**
+     * Send reminder to a specific defaulter
+     */
+    public function sendDefaulterReminder($defaulter, ?string $customMessage = null): array
+    {
+        $phone = $defaulter->business->owner_phone ?? $defaulter->business->phone;
+        
+        if (!$phone) {
+            return ['success' => false, 'error' => 'No phone number available'];
+        }
+
+        // Get template or use custom message
+        $template = $customMessage ?? $this->getTemplate('defaulter_reminder');
+        if (!$template) {
+            $template = "Dear {name}, you have an outstanding balance of NGN{amount} due {days_overdue} days ago. Please make payment to avoid penalties. - {tenant_name}";
+        }
+
+        // Personalize message
+        $message = str_replace(
+            ['{name}', '{business_name}', '{amount}', '{days_overdue}', '{tenant_name}'],
+            [
+                $defaulter->business->owner_name ?? $defaulter->business->name,
+                $defaulter->business->name,
+                number_format($defaulter->amount_due, 0),
+                $defaulter->days_overdue,
+                config('app.name', 'FlexCloud'),
+            ],
+            $template
+        );
+
+        return $this->send($phone, $message, 'defaulter_reminder', 'defaulter', $defaulter->id);
+    }
+
+    /**
+     * Get SMS balance from provider
+     */
+    public function getBalance(): array
+    {
+        if (!$this->settings) {
+            return ['success' => true, 'balance' => 'N/A (Mock Mode)', 'is_mock' => true];
+        }
+
+        try {
+            $result = match($this->provider) {
+                'termii' => $this->getTermiiBalance(),
+                'twilio' => $this->getTwilioBalance(),
+                'africas_talking' => $this->getAfricasTalkingBalance(),
+                default => ['success' => false, 'message' => 'Unknown provider'],
+            };
+
+            return $result;
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get Termii balance
+     */
+    protected function getTermiiBalance(): array
+    {
+        try {
+            $response = Http::get('https://api.ng.termii.com/api/get-balance', [
+                'api_key' => decrypt($this->settings->api_key),
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'success' => true,
+                    'balance' => $data['balance'] ?? 0,
+                    'currency' => $data['currency'] ?? 'NGN',
+                ];
+            }
+
+            return ['success' => false, 'message' => 'Failed to fetch balance'];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get Twilio balance
+     */
+    protected function getTwilioBalance(): array
+    {
+        try {
+            $config = json_decode($this->settings->additional_config, true) ?? [];
+            $sid = $config['account_sid'] ?? '';
+            $token = decrypt($this->settings->api_key);
+
+            $response = Http::withBasicAuth($sid, $token)
+                ->get("https://api.twilio.com/2010-04-01/Accounts/{$sid}/Balance.json");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'success' => true,
+                    'balance' => $data['balance'] ?? 0,
+                    'currency' => $data['currency'] ?? 'USD',
+                ];
+            }
+
+            return ['success' => false, 'message' => 'Failed to fetch balance'];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get Africa's Talking balance
+     */
+    protected function getAfricasTalkingBalance(): array
+    {
+        try {
+            $config = json_decode($this->settings->additional_config, true) ?? [];
+            $username = $config['username'] ?? '';
+
+            $response = Http::withHeaders([
+                'apiKey' => decrypt($this->settings->api_key),
+            ])->get("https://api.africastalking.com/version1/user?username={$username}");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $balance = $data['UserData']['balance'] ?? '0';
+                // Parse balance string like "KES 10.00"
+                preg_match('/([A-Z]{3})\s*([\d.]+)/', $balance, $matches);
+                return [
+                    'success' => true,
+                    'balance' => $matches[2] ?? 0,
+                    'currency' => $matches[1] ?? 'KES',
+                ];
+            }
+
+            return ['success' => false, 'message' => 'Failed to fetch balance'];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
 }
