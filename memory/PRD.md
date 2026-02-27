@@ -361,7 +361,9 @@ To run this application:
 - [x] Full Audit Logging (Tenant-level with Auditable trait)
 - [x] Platform Analytics Dashboard
 - [x] Tenant Settings UI (Payment & SMS Gateway Configuration)
-- [ ] WebSocket Notifications for Backup Progress
+- [x] WebSocket Notifications (Polling fallback with BroadcastService)
+- [x] Message Templates UI with Live Preview & Mobile Mockup
+- [x] Apache/Nginx Wildcard Subdomain Configuration
 
 ### P3 (Low) - BACKLOG
 - [ ] Mobile app (React Native)
