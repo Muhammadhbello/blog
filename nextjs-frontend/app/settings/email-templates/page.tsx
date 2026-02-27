@@ -550,11 +550,13 @@ export default function EmailTemplatesPage() {
                     Email Body (HTML)
                   </label>
                   <textarea
+                    ref={textareaRef}
                     value={editedBody}
                     onChange={(e) => handleBodyChange(e.target.value)}
                     rows={20}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono text-sm"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono text-sm bg-gray-50"
                     placeholder="Enter HTML content..."
+                    spellCheck="false"
                   />
                 </div>
               </div>
