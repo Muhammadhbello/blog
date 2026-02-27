@@ -382,6 +382,19 @@ To run this application:
 ## Changelog
 
 ### December 2025 (Current Session - Documentation & Templates)
+**Platform Revenue Dashboard (Enhancement):**
+- Created `/app/nextjs-frontend/app/platform/revenue-dashboard/page.tsx` with:
+  - Interactive Area Chart for daily revenue trends
+  - Donut Chart for revenue by category distribution
+  - Horizontal Bar Chart for tenant performance comparison
+  - Composed Chart for reconciliation status (bars + line)
+  - Payout history chart with amount trends
+  - Transaction volume line chart
+  - Tenant growth analysis table with sparklines
+  - Custom tooltips with formatted currency
+  - Responsive design for all screen sizes
+- Updated Platform Sidebar with Revenue Dashboard link
+
 **Platform Payouts Module:**
 - Created `/app/nextjs-frontend/app/platform/payouts/page.tsx` with:
   - Stats dashboard (pending, completed, avg processing time, platform earnings)
