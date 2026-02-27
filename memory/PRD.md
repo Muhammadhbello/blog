@@ -376,6 +376,30 @@ To run this application:
 ## Changelog
 
 ### December 2025 (Current Session - Enterprise Features)
+**WebSocket Notifications & Real-time Updates:**
+- Created BroadcastService for real-time notifications (backup, restore, SMS progress)
+- Added polling fallback endpoints in NotificationController
+- Created broadcast_messages migration for message queue
+- Real-time API: `/api/realtime/poll`, `/api/realtime/backup/{id}/progress`
+
+**Message Templates UI with Live Preview:**
+- Built full template editor at `/settings/templates`
+- Split-view layout: template list, editor, live preview
+- Mobile phone mockup preview (realistic iPhone design)
+- Desktop/raw preview mode toggle
+- Placeholder insertion with one-click
+- Character count and SMS segment calculator
+- Sample data preview with placeholder replacement
+
+**Apache/Nginx Wildcard Subdomain Configuration:**
+- Created Apache config at `config/apache/flexcloud.conf`
+- Created Nginx config at `config/nginx/flexcloud.conf`
+- Setup script at `scripts/setup-apache.sh`
+- Development start script at `scripts/start-dev.sh`
+- Comprehensive setup guide: `LOCAL_SETUP_GUIDE.md`
+- Support for *.flexcloud.test wildcard domains
+- Reverse proxy to Laravel (8000) and Next.js (3000)
+
 **Secure Impersonation:**
 - Enhanced TenantController with full impersonation session tracking
 - Created impersonation_sessions migration
