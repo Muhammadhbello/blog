@@ -488,23 +488,67 @@ export default function RevenueDashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Revenue Dashboard</h1>
-            <p className="text-gray-500">Comprehensive platform revenue analytics</p>
+            <p className="text-gray-500">
+              {dateRange ? (
+                <span>
+                  {new Date(dateRange.start).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })} - {new Date(dateRange.end).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+              ) : (
+                'Comprehensive platform revenue analytics'
+              )}
+            </p>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Date Range Selector */}
             <div className="relative">
-              <select
-                value={range}
-                onChange={(e) => setRange(e.target.value)}
-                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="quarter">This Quarter</option>
-                <option value="year">This Year</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <div className="flex items-center gap-2">
+                <select
+                  value={rangePreset}
+                  onChange={(e) => handleRangeChange(e.target.value)}
+                  className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {datePresets.map(preset => (
+                    <option key={preset.value} value={preset.value}>{preset.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
+
+            {/* Custom Date Picker */}
+            {showDatePicker && (
+              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-2">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="px-2 py-1 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-gray-400">to</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="px-2 py-1 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={applyCustomDateRange}
+                  className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  <Check className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDatePicker(false);
+                    setRangePreset('month');
+                  }}
+                  className="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
             
             <button
               onClick={fetchData}
@@ -515,7 +559,10 @@ export default function RevenueDashboardPage() {
               Refresh
             </button>
             
-            <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium text-white transition-colors">
+            <button 
+              onClick={() => setShowExportModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium text-white transition-colors"
+            >
               <Download className="h-4 w-4" />
               Export
             </button>
