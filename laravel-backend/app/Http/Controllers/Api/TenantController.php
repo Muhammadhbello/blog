@@ -285,9 +285,19 @@ class TenantController extends Controller
 
     /**
      * Impersonate a tenant (enter tenant portal as super admin)
+     * Platform admin gets FULL ACCESS to the tenant portal
      */
     public function impersonate(Tenant $tenant)
     {
+        $platformUser = auth()->user();
+        
+        // Verify this is a platform admin
+        if ($platformUser->tenant_id !== null) {
+            return response()->json([
+                'message' => 'Only platform admins can impersonate tenants',
+            ], 403);
+        }
+
         // Get the tenant's chairman (admin) user
         $tenantAdmin = User::where('tenant_id', $tenant->id)
             ->where('role', 'chairman')
@@ -299,35 +309,107 @@ class TenantController extends Controller
             ], 404);
         }
 
-        // Generate impersonation token
-        $token = $tenantAdmin->createToken('impersonation-token', ['*'], now()->addHours(2));
+        // Create impersonation session record
+        $sessionId = \Illuminate\Support\Str::uuid();
+        DB::table('impersonation_sessions')->insert([
+            'id' => $sessionId,
+            'platform_user_id' => $platformUser->id,
+            'platform_user_email' => $platformUser->email,
+            'tenant_id' => $tenant->id,
+            'tenant_user_id' => $tenantAdmin->id,
+            'started_at' => now(),
+            'expires_at' => now()->addHours(4),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
+        // Generate impersonation token with extended abilities for platform admin
+        $token = $tenantAdmin->createToken('impersonation-' . $sessionId, [
+            '*', // Full access
+            'impersonation:active',
+        ], now()->addHours(4));
 
         AuditLog::log(
-            'impersonate',
+            'impersonate_start',
             'tenants',
             'Tenant',
             $tenant->id,
             [
                 'tenant_name' => $tenant->name,
+                'tenant_slug' => $tenant->slug,
                 'impersonated_as' => $tenantAdmin->email,
-                'platform_admin' => auth()->user()->email,
+                'platform_admin_id' => $platformUser->id,
+                'platform_admin_email' => $platformUser->email,
+                'session_id' => $sessionId,
             ]
         );
 
         return response()->json([
-            'message' => 'Impersonation token generated',
-            'tenant' => $tenant,
+            'message' => 'Impersonation started - Full access granted',
+            'tenant' => [
+                'id' => $tenant->id,
+                'name' => $tenant->name,
+                'slug' => $tenant->slug,
+                'subdomain' => $tenant->subdomain,
+            ],
             'user' => [
                 'id' => $tenantAdmin->id,
                 'name' => $tenantAdmin->name,
                 'email' => $tenantAdmin->email,
                 'role' => $tenantAdmin->role,
                 'tenant_id' => $tenant->id,
-                'tenant' => $tenant,
             ],
             'token' => $token->plainTextToken,
-            'expires_at' => now()->addHours(2)->toISOString(),
+            'session_id' => $sessionId,
+            'expires_at' => now()->addHours(4)->toISOString(),
             'is_impersonation' => true,
+            'impersonator' => [
+                'id' => $platformUser->id,
+                'name' => $platformUser->name,
+                'email' => $platformUser->email,
+            ],
+            'permissions' => [
+                'full_access' => true,
+                'can_modify_settings' => true,
+                'can_view_financials' => true,
+                'can_manage_users' => true,
+                'restricted_actions' => [], // Platform admin has no restrictions
+            ],
+        ]);
+    }
+
+    /**
+     * Exit impersonation session
+     */
+    public function exitImpersonation(Request $request)
+    {
+        $sessionId = $request->input('session_id');
+        
+        if ($sessionId) {
+            // Mark session as ended
+            DB::table('impersonation_sessions')
+                ->where('id', $sessionId)
+                ->update([
+                    'ended_at' => now(),
+                ]);
+
+            AuditLog::log(
+                'impersonate_end',
+                'tenants',
+                'ImpersonationSession',
+                $sessionId,
+                [
+                    'ended_by' => auth()->user()->email ?? 'unknown',
+                ]
+            );
+        }
+
+        // Revoke the current token
+        auth()->user()?->currentAccessToken()?->delete();
+
+        return response()->json([
+            'message' => 'Impersonation session ended',
+            'redirect_to' => '/platform/tenants',
         ]);
     }
 }
