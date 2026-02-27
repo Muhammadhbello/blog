@@ -175,6 +175,59 @@ DELETE /api/platform/domains/tenant/{slug}
 POST /api/platform/domains/tenant/{slug}/ssl
 ```
 
+### Platform Payouts
+
+Manage tenant revenue payouts with full lifecycle support.
+
+```http
+GET /api/platform/payouts
+Authorization: Bearer {token}
+
+Query Parameters:
+- status (string): pending|processing|completed|failed|all
+- search (string): Search by tenant name or payout ID
+- from (date): Start date filter
+- to (date): End date filter
+
+Response:
+{
+  "data": [
+    {
+      "id": "PO-001",
+      "tenant_id": 1,
+      "tenant_name": "Potiskum LGA",
+      "amount": 15750000,
+      "platform_fee": 787500,
+      "net_amount": 14962500,
+      "status": "pending",
+      "period_start": "2025-01-01",
+      "period_end": "2025-01-15",
+      "transaction_count": 1245
+    }
+  ]
+}
+
+GET /api/platform/payouts/stats
+GET /api/platform/payouts/{payoutId}
+POST /api/platform/payouts/generate
+POST /api/platform/payouts/{payoutId}/process
+POST /api/platform/payouts/bulk-process
+```
+
+### Platform Reconciliation
+
+Match and verify payment transactions across all tenants.
+
+```http
+GET /api/platform/reconciliation/stats
+GET /api/platform/reconciliation/transactions
+GET /api/platform/reconciliation/transactions/{transactionId}
+GET /api/platform/reconciliation/periods
+POST /api/platform/reconciliation/run
+POST /api/platform/reconciliation/transactions/{transactionId}/resolve
+GET /api/platform/reconciliation/export
+```
+
 ---
 
 ## Tenant Endpoints
