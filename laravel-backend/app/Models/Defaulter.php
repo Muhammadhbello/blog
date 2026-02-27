@@ -14,11 +14,18 @@ class Defaulter extends Model
         'days_overdue',
         'last_reminder_sent',
         'reminder_count',
+        'status',
+        'notes',
     ];
 
     protected $casts = [
         'amount_due' => 'decimal:2',
         'last_reminder_sent' => 'datetime',
+    ];
+
+    protected $attributes = [
+        'status' => 'active',
+        'reminder_count' => 0,
     ];
 
     public function tenant(): BelongsTo
