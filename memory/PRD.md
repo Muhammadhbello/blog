@@ -250,6 +250,53 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 
 ## Changelog
 
+### December 2025 (Session 5) - Enterprise Upgrade
+**Backend Enhancements:**
+- Enhanced `SubdomainResolver` middleware with:
+  - Multi-method tenant resolution (subdomain → header → route → user)
+  - Reserved subdomain protection
+  - Tenant status validation (active/suspended/pending/expired)
+  - Response headers for debugging (X-Tenant-ID, X-Response-Time)
+- Enhanced `RevenueShareService` with multiple models:
+  - Percentage model (default 5%)
+  - Tiered model (volume-based brackets)
+  - Flat model (fixed monthly fee)
+  - Hybrid model (base + percentage above threshold)
+  - Category/Item override rules
+  - Platform transaction recording
+  - Statistics aggregation
+- Updated database config for strict platform/tenant separation
+- Added platform migrations:
+  - `revenue_share_rules` - Override rates per tenant/category/item
+  - `revenue_transactions` - Central revenue tracking
+  - `platform_audit_logs` - Global action logging
+  - `impersonation_sessions` - Track admin impersonation
+  - `platform_settings` - Platform configuration
+  - `tenant_subscriptions` - SaaS billing (future)
+
+**Frontend Enhancements:**
+- Created `EnhancedTenantLayout` with:
+  - Collapsible sidebar with toggle
+  - Section-grouped navigation
+  - Mobile-responsive drawer
+  - Impersonation banner
+  - User profile section
+- Created Enterprise Dashboard (`/dashboard/enterprise/`):
+  - Animated counter components
+  - Bento grid layout (asymmetric)
+  - Sparkline mini-charts
+  - Progress ring components
+  - Skeleton loaders (shimmer)
+  - View mode toggle (Comfortable/Compact)
+  - Live indicator with auto-refresh
+  - Revenue share display
+- Created Platform Enterprise Dashboard (`/platform/dashboard/enterprise/`):
+  - Dark theme with glassmorphism
+  - Revenue share breakdown by tenant
+  - Revenue model info cards
+  - Tenant overview stats
+  - Quick tenant management
+
 ### December 2025 (Session 4)
 - Added **Offline POS Sync** system:
   - Device registration for POS terminals
