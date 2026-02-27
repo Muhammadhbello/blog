@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\ConsultantWalletController;
 use App\Http\Controllers\Api\BackupController;
 use App\Http\Controllers\Api\CustomDomainController;
 use App\Http\Controllers\Api\PlatformAnalyticsController;
+use App\Http\Controllers\Api\TenantAuditLogController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/auth/login', [AuthController::class, 'login']);
