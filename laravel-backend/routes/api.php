@@ -31,6 +31,8 @@ use App\Http\Controllers\Api\ReportsController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PrintController;
 use App\Http\Controllers\Api\ConsultantWalletController;
+use App\Http\Controllers\Api\BackupController;
+use App\Http\Controllers\Api\CustomDomainController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/auth/login', [AuthController::class, 'login']);
