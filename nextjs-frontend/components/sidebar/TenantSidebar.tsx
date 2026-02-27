@@ -135,10 +135,11 @@ const tenantMenuGroups: MenuGroup[] = [
     roles: ['chairman', 'treasurer', 'lga_admin'],
     items: [
       { label: 'Integrations', icon: Plug, href: '/settings/integrations' },
-      { label: 'Message Templates', icon: MessageSquare, href: '/settings/templates' },
+      { label: 'SMS Templates', icon: MessageSquare, href: '/settings/templates' },
+      { label: 'Email Templates', icon: Mail, href: '/settings/email-templates' },
       { label: 'Payment Gateways', icon: Plug, href: '/settings/payment' },
       { label: 'SMS & Messaging', icon: MessageSquare, href: '/settings/sms' },
-      { label: 'Email Settings', icon: MessageSquare, href: '/settings/email' },
+      { label: 'Email Settings', icon: Mail, href: '/settings/email' },
       { label: 'Audit Trail', icon: ShieldCheck, href: '/settings/audit' },
       { label: 'Profile', icon: UserCog, href: '/settings/profile' },
     ],
