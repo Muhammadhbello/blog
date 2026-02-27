@@ -1,7 +1,7 @@
 # FlexCloud - Multi-Tenant Revenue Management SaaS
 
 ## Overview
-FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Government Revenue Intelligence, built with Laravel (PHP 8.3) backend and Next.js (React 18, TypeScript) frontend.
+FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Government Revenue Intelligence, built with Laravel 11 (PHP 8.3) backend and Next.js 14 (React 18, TypeScript) frontend.
 
 ## Architecture
 
@@ -17,7 +17,7 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - **Authentication**: Laravel Sanctum (scoped per database)
 - **UI Framework**: Shadcn/UI + Custom Enterprise Components
 
-### Enterprise Features (NEW)
+### Enterprise Features
 - [x] **Subdomain-based Tenancy**: `{tenant}.flexcloud.ng` → automatic DB switching
 - [x] **Revenue Share System**: Platform-level revenue split (5% default)
   - Percentage model (default 5%)
@@ -41,20 +41,21 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 
 ### Platform Admin (Super Admin)
 - [x] Platform login page
+- [x] Platform dashboard with revenue breakdown
 - [x] Tenant management (CRUD)
 - [x] Tenant creation with automatic:
   - Database provisioning
   - Migration running
   - Admin user seeding
 - [x] Tenant status management (suspend/activate)
-- [x] **Enter Tenant Portal** (Impersonation) - Platform admin can access any tenant portal
+- [x] **Enter Tenant Portal** (Impersonation)
 - [x] Platform audit logs
 - [x] Platform settings management
 - [x] Revenue share configuration per tenant
 
 ### Tenant Portal
 - [x] Tenant login page with role tabs (Staff/Business/Consultant)
-- [x] Dashboard with stats cards
+- [x] Enterprise dashboard with Bento Grid layout
 - [x] Sidebar navigation (independently scrollable)
 - [x] **Impersonation Banner** - Shows when platform admin is viewing tenant
 
@@ -64,12 +65,14 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - [x] **Revenue Categories** - CRUD management
 - [x] **Revenue Items** - CRUD with tariff configuration
 - [x] **Revenue Points** - CRUD for collection locations
-- [x] **Businesses** - Registration with categories/sizes
+- [x] **Businesses** - Registration with categories/sizes/hierarchy
+- [x] **Business Categories** - Hierarchical categorization
 - [x] **Invoices** - CRUD, issue, bulk generation, payments, **PDF printing**
 - [x] **Bulk Invoices** - Advanced UI for bulk invoice generation
 - [x] **Tickets** - Batch creation, sell, verify, reports
 - [x] **Closings** - Daily/weekly revenue reconciliation
 - [x] **Consultants** - CRUD with portal access
+- [x] **Consultant Wallet** - Commission tracking and withdrawals
 - [x] **Collectors** - Assignment management
 - [x] **Defaulters** - Detection and SMS reminders
 - [x] **Analytics** - Advanced statistics
@@ -78,8 +81,8 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - [x] **Receipt/Ticket Printing** - Thermal printer support (58mm/80mm)
 
 ### Settings (Per-Tenant)
-- [x] **Payment Gateway Settings** (PaymentPoint/PalmPay) - Live API integration ready
-- [x] **SMS Gateway Settings** (Termii/Twilio/AfricasTalking) - Live API integration ready
+- [x] **Payment Gateway Settings** (PaymentPoint/PalmPay)
+- [x] **SMS Gateway Settings** (Termii/Twilio/AfricasTalking)
 - [x] **Notification Templates** - SMS templates with placeholders
 - [x] **Email Notifications** - SMTP/SendGrid/Mailgun configuration
 - [x] **General Settings** - Tenant configuration
@@ -97,6 +100,7 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
   - Assignment management
   - Ticket selling interface
   - Closing submission
+  - **Wallet & Withdrawals**
 
 ### Roles & Permissions
 - [x] Chairman - Full access
@@ -115,29 +119,34 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 │   ├── app/
 │   │   ├── Http/
 │   │   │   ├── Controllers/Api/
-│   │   │   │   ├── AuthController.php (with business/consultant login)
-│   │   │   │   ├── TenantController.php (with impersonation)
-│   │   │   │   ├── BusinessController.php (with portal methods)
-│   │   │   │   ├── ConsultantController.php (with dashboard)
+│   │   │   │   ├── AuthController.php
+│   │   │   │   ├── TenantController.php
+│   │   │   │   ├── BusinessController.php
+│   │   │   │   ├── ConsultantController.php
+│   │   │   │   ├── ConsultantWalletController.php (NEW)
 │   │   │   │   ├── BulkInvoiceController.php
 │   │   │   │   ├── ReportsController.php
 │   │   │   │   ├── InvoiceController.php
 │   │   │   │   ├── TicketController.php
-│   │   │   │   ├── RevenuePointController.php
 │   │   │   │   ├── ClosingController.php
-│   │   │   │   ├── TenantSettingController.php
+│   │   │   │   ├── NotificationController.php
+│   │   │   │   ├── PrintController.php
 │   │   │   │   └── ...
 │   │   │   └── Middleware/
-│   │   │       ├── ResolveTenant.php
-│   │   │       └── CheckRole.php
+│   │   │       ├── SubdomainResolver.php
+│   │   │       └── RoleMiddleware.php
 │   │   ├── Models/
 │   │   └── Services/
 │   │       ├── TenantDatabaseService.php
 │   │       ├── InvoiceService.php
 │   │       ├── TicketService.php
 │   │       ├── ClosingService.php
-│   │       ├── PaymentGatewayService.php (PaymentPoint/PalmPay)
-│   │       └── SMSService.php (Termii/Twilio/AfricasTalking)
+│   │       ├── PaymentGatewayService.php
+│   │       ├── SMSService.php
+│   │       ├── RevenueShareService.php
+│   │       └── ConsultantWalletService.php (NEW)
+│   ├── app/Console/Commands/
+│   │   └── CreateTenantCommand.php
 │   ├── database/migrations/
 │   │   ├── platform/
 │   │   └── tenant/
@@ -145,35 +154,33 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 │
 └── nextjs-frontend/
     ├── app/
-    │   ├── login/page.tsx (with Staff/Business/Consultant tabs)
+    │   ├── login/page.tsx
     │   ├── dashboard/
+    │   │   ├── page.tsx
+    │   │   └── enterprise/page.tsx
     │   ├── platform/
     │   │   ├── dashboard/
-    │   │   ├── tenants/ (with Enter Portal button)
-    │   │   └── users/
-    │   ├── business-portal/page.tsx (Business dashboard)
-    │   ├── consultant-portal/page.tsx (Consultant dashboard)
+    │   │   │   └── enterprise/page.tsx
+    │   │   └── tenants/
+    │   ├── business-portal/page.tsx
+    │   ├── consultant-portal/
+    │   │   ├── page.tsx
+    │   │   └── wallet/page.tsx (NEW)
     │   ├── businesses/
     │   ├── invoices/
     │   │   ├── page.tsx
-    │   │   ├── bulk/page.tsx (Advanced Bulk Invoice UI)
-    │   │   └── [id]/print/page.tsx (PDF view)
+    │   │   └── bulk/page.tsx
     │   ├── tickets/
-    │   ├── closings/page.tsx
-    │   ├── reports/page.tsx
-    │   ├── revenue-points/
-    │   ├── revenue-items/
-    │   ├── departments/page.tsx
-    │   ├── wards/
-    │   ├── consultants/
-    │   ├── collectors/
-    │   ├── defaulters/
-    │   ├── analytics/
-    │   ├── settings/
-    │   └── admin/
-    └── components/
-        ├── TenantLayout.tsx (with impersonation banner)
-        └── PlatformLayout.tsx
+    │   ├── closings/
+    │   ├── reports/
+    │   ├── offline-sync/
+    │   └── settings/
+    ├── components/
+    │   ├── TenantLayout.tsx
+    │   ├── EnhancedTenantLayout.tsx
+    │   └── PlatformLayout.tsx
+    └── hooks/
+        └── usePermission.ts
 ```
 
 ## API Endpoints
@@ -184,6 +191,7 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - `POST /api/platform/tenants/{id}/impersonate` - Enter tenant portal
 - `POST /api/platform/tenants/{id}/suspend` - Suspend tenant
 - `POST /api/platform/tenants/{id}/activate` - Activate tenant
+- `PUT /api/platform/tenants/{id}/revenue-share` - Update revenue share
 
 ### Auth Routes
 - `POST /api/auth/login` - Login (supports login_type: user/business/consultant)
@@ -195,169 +203,43 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - `POST /api/closings/{id}/reject` - Reject closing
 - `GET/POST /api/tenant/settings/payment` - Payment settings
 - `GET/POST /api/tenant/settings/sms` - SMS settings
-- `GET/PUT /api/tenant/templates/{id}` - Notification templates
 
-### Bulk Invoice Routes (`/api/bulk-invoices/*`)
-- `GET /api/bulk-invoices/businesses` - Get businesses with filters
-- `POST /api/bulk-invoices/preview` - Preview invoices before generation
-- `POST /api/bulk-invoices/generate` - Generate bulk invoices
-- `GET /api/bulk-invoices/history` - Get bulk generation history
-
-### Reports Routes (`/api/reports/*`)
-- `GET /api/reports/dashboard-analytics` - Dashboard analytics
-- `GET /api/reports/invoices` - Invoice report
-- `GET /api/reports/tickets` - Ticket report
-- `GET /api/reports/closings` - Closing report
-- `GET /api/reports/defaulters` - Defaulter report
-- `GET /api/reports/export` - Export reports to CSV
-
-### Business Portal Routes (`/api/business/*`)
-- `GET /api/business/dashboard` - Business dashboard
-- `GET /api/business/invoices` - Business invoices
-- `GET /api/business/profile` - Business profile
-
-### Consultant Portal Routes (`/api/consultant/*`)
-- `GET /api/consultant/dashboard` - Consultant dashboard
-- `GET /api/consultant/my-assignments` - My assignments
-- `GET /api/consultant/my-tickets` - My tickets
-- `GET /api/consultant/my-closings` - My closings
-
-### Offline Sync Routes (`/api/offline/*`)
-- `GET /api/offline/tickets` - Get tickets for offline download
-- `POST /api/offline/sync-tickets` - Sync offline ticket sales
-- `GET /api/offline/sync-history` - Get sync history
-- `POST /api/offline/register-device` - Register a POS device
-
-### Email Notification Routes (`/api/notifications/*`)
-- `GET /api/notifications/email/settings` - Get email settings
-- `POST /api/notifications/email/settings` - Save email settings
-- `POST /api/notifications/email/test` - Send test email
-- `GET /api/notifications/email/templates` - Get email templates
-- `PUT /api/notifications/email/templates/{id}` - Update template
-- `GET /api/notifications/email/logs` - Get email logs
-- `GET /api/notifications/email/stats` - Get email statistics
-- `POST /api/notifications/email/bulk` - Send bulk email
-
-### Print Routes (`/api/print/*`)
-- `GET /api/print/ticket/{id}` - Get ticket print data
-- `GET /api/print/batch/{id}/tickets` - Get batch tickets for printing
-- `GET /api/print/payment/{id}/receipt` - Get payment receipt data
-- `GET /api/print/invoice/{id}` - Get invoice print data
-- `GET /api/print/closing/{id}/receipt` - Get closing receipt data
-- `POST /api/print/settings` - Update print settings
+### Consultant Wallet Routes (NEW)
+- `GET /api/wallet/my` - Get wallet summary
+- `GET /api/wallet/transactions` - Get transactions
+- `POST /api/wallet/withdraw` - Request withdrawal
+- `GET /api/wallet-admin/stats` - Get wallet stats (admin)
+- `GET /api/wallet-admin/withdrawals` - Get withdrawal requests
+- `POST /api/wallet-admin/withdrawals/{id}/approve` - Approve withdrawal
+- `POST /api/wallet-admin/withdrawals/{id}/reject` - Reject withdrawal
+- `GET /api/wallet-admin/commission-rules` - Get commission rules
+- `POST /api/wallet-admin/commission-rules` - Save commission rule
 
 ---
 
-## Changelog
+## Environment Note
+**IMPORTANT:** This project uses Laravel (PHP) backend and Next.js frontend.
 
-### December 2025 (Session 5) - Enterprise Upgrade
-**Backend Enhancements:**
-- Enhanced `SubdomainResolver` middleware with:
-  - Multi-method tenant resolution (subdomain → header → route → user)
-  - Reserved subdomain protection
-  - Tenant status validation (active/suspended/pending/expired)
-  - Response headers for debugging (X-Tenant-ID, X-Response-Time)
-- Enhanced `RevenueShareService` with multiple models:
-  - Percentage model (default 5%)
-  - Tiered model (volume-based brackets)
-  - Flat model (fixed monthly fee)
-  - Hybrid model (base + percentage above threshold)
-  - Category/Item override rules
-  - Platform transaction recording
-  - Statistics aggregation
-- Updated database config for strict platform/tenant separation
-- Added platform migrations:
-  - `revenue_share_rules` - Override rates per tenant/category/item
-  - `revenue_transactions` - Central revenue tracking
-  - `platform_audit_logs` - Global action logging
-  - `impersonation_sessions` - Track admin impersonation
-  - `platform_settings` - Platform configuration
-  - `tenant_subscriptions` - SaaS billing (future)
+The code is located in:
+- `/app/laravel-backend/` - Laravel API backend
+- `/app/nextjs-frontend/` - Next.js frontend
 
-**Frontend Enhancements:**
-- Created `EnhancedTenantLayout` with:
-  - Collapsible sidebar with toggle
-  - Section-grouped navigation
-  - Mobile-responsive drawer
-  - Impersonation banner
-  - User profile section
-- Created Enterprise Dashboard (`/dashboard/enterprise/`):
-  - Animated counter components
-  - Bento grid layout (asymmetric)
-  - Sparkline mini-charts
-  - Progress ring components
-  - Skeleton loaders (shimmer)
-  - View mode toggle (Comfortable/Compact)
-  - Live indicator with auto-refresh
-  - Revenue share display
-- Created Platform Enterprise Dashboard (`/platform/dashboard/enterprise/`):
-  - Dark theme with glassmorphism
-  - Revenue share breakdown by tenant
-  - Revenue model info cards
-  - Tenant overview stats
-  - Quick tenant management
+**This environment requires PHP/MySQL setup to run the Laravel backend.**
 
-### December 2025 (Session 4)
-- Added **Offline POS Sync** system:
-  - Device registration for POS terminals
-  - Download tickets for offline sales
-  - Queue management for pending syncs
-  - Sync history and tracking
-  - Local storage integration
-- Added **Email Notifications** management:
-  - SMTP/SendGrid/Mailgun configuration
-  - Email template management
-  - Email logs and statistics
-  - Bulk email sending to businesses
-  - Test email functionality
-- Added **Receipt/Ticket Printing** for thermal printers:
-  - Support for 58mm and 80mm thermal paper
-  - Ticket receipt printing
-  - Payment receipt printing
-  - Invoice printing (A4)
-  - Closing receipt printing
-  - QR code support
-  - Print settings configuration
-- Added backend controllers: `NotificationController`, `PrintController`
-- Added database migration for email_settings, email_logs, offline_devices, offline_sync_logs
-- Updated sidebar with "Offline Sync" and "Email Notifications" links
+To run this application:
+1. Set up a LEMP (Linux, Nginx, MySQL, PHP) or LAMP stack
+2. Configure MySQL with `flexcloud_platform` database
+3. Run `composer install` in `/app/laravel-backend`
+4. Run `npm install` in `/app/nextjs-frontend`
+5. Configure `.env` files with proper database credentials
+6. Run `php artisan migrate --path=database/migrations/platform`
+7. Run `npm run dev` for Next.js frontend
 
-### December 2025 (Session 3)
-- Added **Advanced Bulk Invoice UI** at `/invoices/bulk`:
-  - Business filtering by ward, department, size, business type
-  - Multiple revenue item selection
-  - Tariff configuration by business size (small/medium/large)
-  - Preview before generation
-  - Batch invoice generation with results summary
-  - SMS notification option
-- Added "Bulk Invoices" link to sidebar navigation
-- Added "Bulk Generate" button to Invoices page
-- Added "Reports" link to sidebar navigation
-
-### December 2025 (Session 2)
-- Added Business Portal frontend with virtual account, invoices, payments
-- Added Consultant Portal frontend with stats, assignments, tickets, closings
-- Added Invoice PDF/Print view
-- Enhanced login page with Staff/Business/Consultant tabs
-- Added Print button to invoices list
-- Updated AuthController for multi-type login
-- Updated ConsultantController with dashboard endpoint
-- Updated BusinessController with portal endpoints
-- Live Payment Gateway integration (PaymentPoint/PalmPay) - API ready
-- Live SMS Gateway integration (Termii/Twilio/AfricasTalking) - API ready
-
-### December 2025 (Session 1)
-- Initial multi-tenant architecture implementation
-- Platform admin dashboard and tenant management
-- Tenant portal with all core modules
-- Revenue points and closings management
-- Per-tenant payment/SMS settings
-- Impersonation feature for platform admin
-- RBAC implementation
+---
 
 ## Roadmap
 
-### P0 (Critical) - COMPLETED
+### P0 (Critical) - COMPLETED ✅
 - [x] Multi-database tenancy core
 - [x] Platform admin dashboard
 - [x] Tenant modules (Wards, Departments, Revenue Points)
@@ -368,24 +250,39 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 - [x] Consultant Portal
 - [x] Payment Gateway Integration (API ready)
 - [x] SMS Gateway Integration (API ready)
+- [x] Consultant Wallet System
 
-### P1 (High) - COMPLETED
-- [x] Offline POS sync queue (**COMPLETED**)
-- [x] Advanced bulk invoice operations UI (**COMPLETED**)
-- [x] Receipt/ticket printing for thermal printers (**COMPLETED**)
+### P1 (High) - COMPLETED ✅
+- [x] Offline POS sync queue
+- [x] Advanced bulk invoice operations UI
+- [x] Receipt/ticket printing for thermal printers
+- [x] Enhanced business registration with categories
 
-### P2 (Medium) - COMPLETED
-- [x] Advanced reporting with charts (**COMPLETED**)
-- [x] Email notifications (**COMPLETED**)
-- [ ] Mobile app (React Native)
+### P2 (Medium) - IN PROGRESS
+- [x] Advanced reporting with charts
+- [x] Email notifications
+- [ ] Mobile app (React Native) - BACKLOG
 
-### P3 (Low)
-- [ ] Multi-language support
+### P3 (Low) - BACKLOG
+- [ ] Multi-language support (i18n)
 - [ ] Custom domain per tenant
 
-## Environment Note
-This project uses Laravel (PHP) backend and Next.js frontend. The code is located in:
-- `/app/laravel-backend/` - Laravel API backend
-- `/app/nextjs-frontend/` - Next.js frontend
+---
 
-**Note:** This environment may require PHP/MySQL setup to run the Laravel backend. The frontend can be tested independently with mocked API data.
+## Changelog
+
+### December 2025 (Current Session)
+- Added ConsultantWalletController and ConsultantWalletService
+- Added wallet routes to API
+- Created consultant wallet frontend page
+- Added wallet link to consultant portal
+- Updated PRD with current status
+
+### December 2025 (Previous Sessions)
+- Implemented complete multi-tenant architecture
+- Created platform and tenant dashboards
+- Built all core modules (businesses, invoices, tickets, closings)
+- Implemented revenue share system
+- Created business and consultant portals
+- Added offline sync and printing features
+- Implemented RBAC with usePermission hook
