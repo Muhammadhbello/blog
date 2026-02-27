@@ -130,6 +130,31 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/tenant/{slug}/ssl', [CustomDomainController::class, 'enableSsl']);
             Route::post('/check-ssl', [CustomDomainController::class, 'checkSslCertificates']);
         });
+
+        // ==========================================
+        // PAYOUTS MANAGEMENT
+        // ==========================================
+        Route::prefix('payouts')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\PayoutController::class, 'index']);
+            Route::get('/stats', [\App\Http\Controllers\Api\PayoutController::class, 'stats']);
+            Route::get('/{payoutId}', [\App\Http\Controllers\Api\PayoutController::class, 'show']);
+            Route::post('/generate', [\App\Http\Controllers\Api\PayoutController::class, 'generate']);
+            Route::post('/{payoutId}/process', [\App\Http\Controllers\Api\PayoutController::class, 'process']);
+            Route::post('/bulk-process', [\App\Http\Controllers\Api\PayoutController::class, 'processBulk']);
+        });
+
+        // ==========================================
+        // RECONCILIATION MANAGEMENT
+        // ==========================================
+        Route::prefix('reconciliation')->group(function () {
+            Route::get('/stats', [\App\Http\Controllers\Api\ReconciliationController::class, 'stats']);
+            Route::get('/transactions', [\App\Http\Controllers\Api\ReconciliationController::class, 'transactions']);
+            Route::get('/transactions/{transactionId}', [\App\Http\Controllers\Api\ReconciliationController::class, 'show']);
+            Route::get('/periods', [\App\Http\Controllers\Api\ReconciliationController::class, 'periods']);
+            Route::post('/run', [\App\Http\Controllers\Api\ReconciliationController::class, 'run']);
+            Route::post('/transactions/{transactionId}/resolve', [\App\Http\Controllers\Api\ReconciliationController::class, 'resolve']);
+            Route::get('/export', [\App\Http\Controllers\Api\ReconciliationController::class, 'export']);
+        });
     });
 
     // Legacy tenant routes (backward compatibility)
