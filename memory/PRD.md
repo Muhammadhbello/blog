@@ -243,13 +243,19 @@ FlexCloud is an **enterprise-grade** multi-tenant SaaS platform for Local Govern
 ### Platform Routes (`/api/platform/*`)
 - `POST /api/platform/tenants` - Create tenant
 - `GET /api/platform/tenants` - List tenants
-- `POST /api/platform/tenants/{id}/impersonate` - Enter tenant portal
+- `POST /api/platform/tenants/{id}/impersonate` - Enter tenant portal (Full Access)
+- `POST /api/platform/impersonate/exit` - Exit impersonation session
 - `POST /api/platform/tenants/{id}/suspend` - Suspend tenant
 - `POST /api/platform/tenants/{id}/activate` - Activate tenant
 - `PUT /api/platform/tenants/{id}/revenue-share` - Update revenue share
 - `GET/POST /api/platform/backups/*` - Backup management
 - `GET/POST /api/platform/restore/*` - Restore management
 - `GET/POST /api/platform/domains/*` - Custom domain management
+- `GET /api/platform/analytics/dashboard` - Dashboard stats with metrics
+- `GET /api/platform/analytics/revenue-trends` - Revenue trends over time
+- `GET /api/platform/analytics/tenant-comparison` - Compare tenant performance
+- `GET /api/platform/analytics/transaction-volume` - Transaction volume analytics
+- `GET /api/platform/analytics/health` - Platform health metrics
 
 ### Auth Routes
 - `POST /api/auth/login` - Login (supports login_type: user/business/consultant)
