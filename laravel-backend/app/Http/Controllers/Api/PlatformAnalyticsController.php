@@ -412,4 +412,367 @@ class PlatformAnalyticsController extends Controller
         
         return max(0, $score);
     }
+
+    /**
+     * Get comprehensive revenue dashboard data
+     */
+    public function getRevenueDashboard(Request $request)
+    {
+        $range = $request->get('range', 'month');
+        $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : $this->getStartDate($range);
+        $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : now();
+        $previousStart = $startDate->copy()->subDays($startDate->diffInDays($endDate));
+
+        // Revenue by day
+        $revenueByDay = DB::connection('platform')
+            ->table('transactions')
+            ->where('status', 'completed')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw("
+                DATE(created_at) as date,
+                SUM(total_amount) as gross,
+                SUM(platform_fee) as platform_fee,
+                SUM(total_amount) - SUM(platform_fee) as net,
+                COUNT(*) as transactions
+            ")
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        // Tenant revenue breakdown
+        $tenantRevenue = DB::connection('platform')
+            ->table('transactions as t')
+            ->join('tenants as tn', 't.tenant_id', '=', 'tn.id')
+            ->where('t.status', 'completed')
+            ->whereBetween('t.created_at', [$startDate, $endDate])
+            ->selectRaw("
+                tn.id,
+                tn.name,
+                tn.slug,
+                SUM(t.total_amount) as gross,
+                SUM(t.platform_fee) as platform_fee,
+                COUNT(*) as transactions
+            ")
+            ->groupBy('tn.id', 'tn.name', 'tn.slug')
+            ->orderByDesc('gross')
+            ->get();
+
+        // Calculate growth for each tenant
+        $tenantRevenueWithGrowth = $tenantRevenue->map(function($tenant) use ($previousStart, $startDate) {
+            $previousRevenue = DB::connection('platform')
+                ->table('transactions')
+                ->where('tenant_id', $tenant->id)
+                ->where('status', 'completed')
+                ->whereBetween('created_at', [$previousStart, $startDate])
+                ->sum('total_amount');
+            
+            $growth = $previousRevenue > 0 
+                ? (($tenant->gross - $previousRevenue) / $previousRevenue) * 100 
+                : ($tenant->gross > 0 ? 100 : 0);
+            
+            return [
+                'id' => $tenant->id,
+                'name' => $tenant->name,
+                'slug' => $tenant->slug,
+                'gross' => (float) $tenant->gross,
+                'platform_fee' => (float) $tenant->platform_fee,
+                'transactions' => (int) $tenant->transactions,
+                'growth' => round($growth, 1),
+            ];
+        });
+
+        // Revenue by category
+        $categoryRevenue = DB::connection('platform')
+            ->table('transactions as t')
+            ->leftJoin('revenue_items as ri', 't.revenue_item_id', '=', 'ri.id')
+            ->leftJoin('revenue_categories as rc', 'ri.category_id', '=', 'rc.id')
+            ->where('t.status', 'completed')
+            ->whereBetween('t.created_at', [$startDate, $endDate])
+            ->selectRaw("
+                COALESCE(rc.name, 'Other') as name,
+                SUM(t.total_amount) as value,
+                COUNT(*) as count
+            ")
+            ->groupBy('rc.name')
+            ->orderByDesc('value')
+            ->limit(6)
+            ->get();
+
+        // Payout data
+        $payoutData = DB::connection('platform')
+            ->table('payouts')
+            ->selectRaw("
+                DATE_FORMAT(created_at, '%b') as month,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(net_amount) as amount
+            ")
+            ->where('created_at', '>=', now()->subMonths(5))
+            ->groupByRaw("DATE_FORMAT(created_at, '%Y-%m'), DATE_FORMAT(created_at, '%b')")
+            ->orderByRaw("DATE_FORMAT(created_at, '%Y-%m')")
+            ->get();
+
+        // Reconciliation data
+        $reconciliationData = DB::connection('platform')
+            ->table('reconciliation_periods')
+            ->select('period', 'matched', 'unmatched', 'total_transactions')
+            ->selectRaw("
+                ROUND((matched / NULLIF(total_transactions, 0)) * 100, 1) as rate,
+                (total_transactions - matched - unmatched) as disputed
+            ")
+            ->where('created_at', '>=', now()->subMonths(2))
+            ->orderBy('created_at', 'desc')
+            ->limit(4)
+            ->get()
+            ->reverse()
+            ->values();
+
+        // Calculate totals
+        $totalGross = $revenueByDay->sum('gross');
+        $totalPlatformFee = $revenueByDay->sum('platform_fee');
+        $totalTransactions = $revenueByDay->sum('transactions');
+
+        // Previous period totals for growth
+        $previousGross = DB::connection('platform')
+            ->table('transactions')
+            ->where('status', 'completed')
+            ->whereBetween('created_at', [$previousStart, $startDate])
+            ->sum('total_amount');
+
+        $monthlyGrowth = $previousGross > 0 
+            ? (($totalGross - $previousGross) / $previousGross) * 100 
+            : 0;
+
+        // Get reconciliation match rate
+        $matchRate = DB::connection('platform')
+            ->table('reconciliation_records')
+            ->where('created_at', '>=', $startDate)
+            ->selectRaw("
+                ROUND(SUM(CASE WHEN status = 'matched' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0), 1) as rate
+            ")
+            ->value('rate') ?? 0;
+
+        return response()->json([
+            'stats' => [
+                'totalGross' => (float) $totalGross,
+                'totalPlatformFee' => (float) $totalPlatformFee,
+                'totalTransactions' => (int) $totalTransactions,
+                'avgTransactionValue' => $totalTransactions > 0 ? round($totalGross / $totalTransactions) : 0,
+                'monthlyGrowth' => round($monthlyGrowth, 1),
+                'matchRate' => (float) $matchRate,
+            ],
+            'revenueData' => $revenueByDay,
+            'tenantRevenue' => $tenantRevenueWithGrowth,
+            'categoryData' => $categoryRevenue,
+            'payoutData' => $payoutData,
+            'reconciliationData' => $reconciliationData,
+            'dateRange' => [
+                'start' => $startDate->toDateString(),
+                'end' => $endDate->toDateString(),
+                'range' => $range,
+            ],
+        ]);
+    }
+
+    /**
+     * Export revenue data as CSV
+     */
+    public function exportRevenueCsv(Request $request)
+    {
+        $range = $request->get('range', 'month');
+        $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : $this->getStartDate($range);
+        $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : now();
+        $type = $request->get('type', 'transactions'); // transactions, tenants, categories
+
+        $filename = "flexcloud_{$type}_{$startDate->format('Ymd')}_{$endDate->format('Ymd')}.csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function() use ($type, $startDate, $endDate) {
+            $file = fopen('php://output', 'w');
+
+            switch ($type) {
+                case 'transactions':
+                    fputcsv($file, ['Date', 'Tenant', 'Reference', 'Amount', 'Platform Fee', 'Net Amount', 'Status']);
+                    
+                    DB::connection('platform')
+                        ->table('transactions as t')
+                        ->join('tenants as tn', 't.tenant_id', '=', 'tn.id')
+                        ->whereBetween('t.created_at', [$startDate, $endDate])
+                        ->orderBy('t.created_at', 'desc')
+                        ->chunk(1000, function($transactions) use ($file) {
+                            foreach ($transactions as $tx) {
+                                fputcsv($file, [
+                                    $tx->created_at,
+                                    $tx->name,
+                                    $tx->reference ?? 'N/A',
+                                    $tx->total_amount,
+                                    $tx->platform_fee,
+                                    $tx->total_amount - $tx->platform_fee,
+                                    $tx->status,
+                                ]);
+                            }
+                        });
+                    break;
+
+                case 'tenants':
+                    fputcsv($file, ['Tenant', 'Slug', 'Gross Revenue', 'Platform Fee', 'Net Revenue', 'Transactions', 'Businesses', 'Users']);
+                    
+                    $tenants = DB::connection('platform')
+                        ->table('transactions as t')
+                        ->join('tenants as tn', 't.tenant_id', '=', 'tn.id')
+                        ->where('t.status', 'completed')
+                        ->whereBetween('t.created_at', [$startDate, $endDate])
+                        ->selectRaw("
+                            tn.name, tn.slug,
+                            SUM(t.total_amount) as gross,
+                            SUM(t.platform_fee) as platform_fee,
+                            SUM(t.total_amount) - SUM(t.platform_fee) as net,
+                            COUNT(*) as transactions,
+                            (SELECT COUNT(*) FROM businesses WHERE tenant_id = tn.id) as businesses,
+                            (SELECT COUNT(*) FROM users WHERE tenant_id = tn.id) as users
+                        ")
+                        ->groupBy('tn.id', 'tn.name', 'tn.slug')
+                        ->orderByDesc('gross')
+                        ->get();
+                    
+                    foreach ($tenants as $tenant) {
+                        fputcsv($file, [
+                            $tenant->name,
+                            $tenant->slug,
+                            $tenant->gross,
+                            $tenant->platform_fee,
+                            $tenant->net,
+                            $tenant->transactions,
+                            $tenant->businesses,
+                            $tenant->users,
+                        ]);
+                    }
+                    break;
+
+                case 'categories':
+                    fputcsv($file, ['Category', 'Total Revenue', 'Transaction Count', 'Average Value']);
+                    
+                    $categories = DB::connection('platform')
+                        ->table('transactions as t')
+                        ->leftJoin('revenue_items as ri', 't.revenue_item_id', '=', 'ri.id')
+                        ->leftJoin('revenue_categories as rc', 'ri.category_id', '=', 'rc.id')
+                        ->where('t.status', 'completed')
+                        ->whereBetween('t.created_at', [$startDate, $endDate])
+                        ->selectRaw("
+                            COALESCE(rc.name, 'Other') as category,
+                            SUM(t.total_amount) as total,
+                            COUNT(*) as count,
+                            AVG(t.total_amount) as avg_value
+                        ")
+                        ->groupBy('rc.name')
+                        ->orderByDesc('total')
+                        ->get();
+                    
+                    foreach ($categories as $cat) {
+                        fputcsv($file, [
+                            $cat->category,
+                            $cat->total,
+                            $cat->count,
+                            round($cat->avg_value, 2),
+                        ]);
+                    }
+                    break;
+
+                case 'daily':
+                    fputcsv($file, ['Date', 'Gross Revenue', 'Platform Fee', 'Net Revenue', 'Transactions']);
+                    
+                    $daily = DB::connection('platform')
+                        ->table('transactions')
+                        ->where('status', 'completed')
+                        ->whereBetween('created_at', [$startDate, $endDate])
+                        ->selectRaw("
+                            DATE(created_at) as date,
+                            SUM(total_amount) as gross,
+                            SUM(platform_fee) as platform_fee,
+                            SUM(total_amount) - SUM(platform_fee) as net,
+                            COUNT(*) as transactions
+                        ")
+                        ->groupBy('date')
+                        ->orderBy('date')
+                        ->get();
+                    
+                    foreach ($daily as $day) {
+                        fputcsv($file, [
+                            $day->date,
+                            $day->gross,
+                            $day->platform_fee,
+                            $day->net,
+                            $day->transactions,
+                        ]);
+                    }
+                    break;
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export revenue data as PDF
+     */
+    public function exportRevenuePdf(Request $request)
+    {
+        $range = $request->get('range', 'month');
+        $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : $this->getStartDate($range);
+        $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : now();
+
+        // Get summary data
+        $summary = DB::connection('platform')
+            ->table('transactions')
+            ->where('status', 'completed')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw("
+                SUM(total_amount) as gross,
+                SUM(platform_fee) as platform_fee,
+                COUNT(*) as transactions,
+                AVG(total_amount) as avg_value
+            ")
+            ->first();
+
+        // Get tenant breakdown
+        $tenants = DB::connection('platform')
+            ->table('transactions as t')
+            ->join('tenants as tn', 't.tenant_id', '=', 'tn.id')
+            ->where('t.status', 'completed')
+            ->whereBetween('t.created_at', [$startDate, $endDate])
+            ->selectRaw("
+                tn.name,
+                SUM(t.total_amount) as gross,
+                SUM(t.platform_fee) as platform_fee,
+                COUNT(*) as transactions
+            ")
+            ->groupBy('tn.id', 'tn.name')
+            ->orderByDesc('gross')
+            ->limit(10)
+            ->get();
+
+        // For now, return JSON that can be converted to PDF on frontend
+        // In production, use dompdf or similar library
+        return response()->json([
+            'report' => [
+                'title' => 'FlexCloud Revenue Report',
+                'period' => $startDate->format('M d, Y') . ' - ' . $endDate->format('M d, Y'),
+                'generated_at' => now()->toISOString(),
+            ],
+            'summary' => [
+                'gross_revenue' => $summary->gross ?? 0,
+                'platform_fees' => $summary->platform_fee ?? 0,
+                'net_revenue' => ($summary->gross ?? 0) - ($summary->platform_fee ?? 0),
+                'total_transactions' => $summary->transactions ?? 0,
+                'avg_transaction_value' => round($summary->avg_value ?? 0, 2),
+            ],
+            'tenant_breakdown' => $tenants,
+        ]);
+    }
 }
