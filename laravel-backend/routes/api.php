@@ -315,6 +315,17 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ==========================================
+    // REAL-TIME NOTIFICATIONS (POLLING FALLBACK)
+    // ==========================================
+    Route::prefix('realtime')->group(function () {
+        Route::get('/poll', [NotificationController::class, 'poll']);
+        Route::post('/subscribe', [NotificationController::class, 'subscribe']);
+        Route::get('/backup/{backupId}/progress', [NotificationController::class, 'getBackupProgress']);
+        Route::get('/restore/{restoreId}/progress', [NotificationController::class, 'getRestoreProgress']);
+        Route::get('/sms/{batchId}/progress', [NotificationController::class, 'getSmsProgress']);
+    });
+
+    // ==========================================
     // PRINT / RECEIPT ROUTES
     // ==========================================
     Route::middleware(['role:chairman,treasurer,hod,collector,consultant'])->prefix('print')->group(function () {
