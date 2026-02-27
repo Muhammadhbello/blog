@@ -190,9 +190,21 @@ export default function ConsultantPortalPage() {
                 Total Collections: {formatCurrency(dashboard.consultant.total_collected)}
               </p>
             </div>
-            <div className="bg-white/20 rounded-xl p-4 text-center">
-              <p className="text-amber-100 text-xs">Commission Rate</p>
-              <p className="text-2xl font-bold">{dashboard.consultant.commission_rate}%</p>
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 rounded-xl p-4 text-center">
+                <p className="text-amber-100 text-xs">Commission Rate</p>
+                <p className="text-2xl font-bold">{dashboard.consultant.commission_rate}%</p>
+              </div>
+              <button
+                onClick={() => router.push('/consultant-portal/wallet')}
+                className="px-6 py-3 bg-white text-amber-600 rounded-xl font-semibold hover:bg-amber-50 transition flex items-center gap-2"
+                data-testid="view-wallet-btn"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                My Wallet
+              </button>
             </div>
           </div>
         </div>
