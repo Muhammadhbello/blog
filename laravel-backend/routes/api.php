@@ -81,6 +81,41 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Impersonate Tenant (Enter Tenant Portal)
         Route::post('/tenants/{tenant}/impersonate', [TenantController::class, 'impersonate']);
+
+        // ==========================================
+        // BACKUP & RESTORE MANAGEMENT
+        // ==========================================
+        Route::prefix('backups')->group(function () {
+            Route::get('/stats', [BackupController::class, 'getStats']);
+            Route::get('/', [BackupController::class, 'index']);
+            Route::post('/platform', [BackupController::class, 'backupPlatform']);
+            Route::post('/tenant/{slug}', [BackupController::class, 'backupTenant']);
+            Route::get('/tenant/{slug}', [BackupController::class, 'getTenantBackups']);
+            Route::get('/tenant/{slug}/available', [BackupController::class, 'getAvailableRestores']);
+            Route::get('/download/{backupId}', [BackupController::class, 'downloadBackup']);
+            Route::delete('/{backupId}', [BackupController::class, 'deleteBackup']);
+            Route::post('/cleanup', [BackupController::class, 'runCleanup']);
+        });
+
+        Route::prefix('restore')->group(function () {
+            Route::get('/history', [BackupController::class, 'getRestoreHistory']);
+            Route::post('/tenant/{slug}', [BackupController::class, 'initiateRestore']);
+            Route::post('/confirm/{restoreId}', [BackupController::class, 'confirmRestore']);
+            Route::get('/progress/{restoreId}', [BackupController::class, 'getRestoreProgress']);
+        });
+
+        // ==========================================
+        // CUSTOM DOMAIN MANAGEMENT
+        // ==========================================
+        Route::prefix('domains')->group(function () {
+            Route::get('/', [CustomDomainController::class, 'getAllCustomDomains']);
+            Route::get('/tenant/{slug}', [CustomDomainController::class, 'getStatus']);
+            Route::post('/tenant/{slug}', [CustomDomainController::class, 'setDomain']);
+            Route::post('/tenant/{slug}/verify', [CustomDomainController::class, 'verifyDomain']);
+            Route::delete('/tenant/{slug}', [CustomDomainController::class, 'removeDomain']);
+            Route::post('/tenant/{slug}/ssl', [CustomDomainController::class, 'enableSsl']);
+            Route::post('/check-ssl', [CustomDomainController::class, 'checkSslCertificates']);
+        });
     });
 
     // Legacy tenant routes (backward compatibility)
